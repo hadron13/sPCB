@@ -102,11 +102,24 @@ circuit_t test_circuit;
 
 void simulation_init(){
     test_circuit.components = calloc(10, sizeof(component_t));
+    test_circuit.nodes      = calloc(10, sizeof(node_t));
 
     ti7400_init(&test_circuit.components[0]); 
     ti7404_init(&test_circuit.components[1]); 
+
     test_circuit.components[0].pins[13].voltage = 5.0;
-    test_circuit.components[1].pins[13].voltage = 5.0;
+    test_circuit.components[1].pins[13].voltage = 4.5;
+    test_circuit.components[1].pins[0].voltage = 5.0;
+
+    test_circuit.nodes[0] = (node_t){
+        .voltage = 0.0,
+        .pins = calloc(10, sizeof(pin_t*)),
+        .n_pins = 3
+    };
+    test_circuit.nodes[0].pins[0] = &test_circuit.components[0].pins[0];
+    test_circuit.nodes[0].pins[1] = &test_circuit.components[0].pins[1];
+    test_circuit.nodes[0].pins[2] = &test_circuit.components[1].pins[1];
+
 }
 
 
@@ -114,7 +127,28 @@ void simulation_init(){
 void simulation_step(){
     ti7400_update(&test_circuit.components[0], 1.0/1000);
     ti7404_update(&test_circuit.components[1], 1.0/1000);
-
+    
+    node_t *node = &test_circuit.nodes[0];
+    
+    for(int i = 0; i < node->n_pins; i++){
+        pin_t *pin = node->pins[i];
+        SDL_Log("%i", pin->type);
+        if(pin->type == OUT){
+            node->voltage = pin->voltage;
+            break;
+        }
+    }
+    for(int i = 0; i < node->n_pins; i++){
+        pin_t *pin = node->pins[i];
+        if(pin->type == IN){
+            pin->voltage = node->voltage;
+        }
+    }
+    
+    SDL_Log("frame ---");
+    SDL_Log("7400");
     dump_chip(&test_circuit.components[0], 14); 
+    SDL_Log("7404");
+    dump_chip(&test_circuit.components[1], 14); 
 }
 

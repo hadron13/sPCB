@@ -1,5 +1,6 @@
 #pragma once
 
+#include<stddef.h>
 #include<stdint.h>
 
 #define mA (1.0/1000.0)
@@ -34,7 +35,9 @@ typedef struct{
 }component_model_t;
 
 typedef struct{
+    size_t n_pins;
     pin_t **pins;
+    float voltage;
 }node_t;
 
 typedef struct{
