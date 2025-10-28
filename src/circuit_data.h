@@ -2,6 +2,9 @@
 
 #include<stdint.h>
 
+#define mA (1.0/1000.0)
+#define uA (mA/1000.0)
+
 typedef enum{
     PASSIVE, IN, OUT, INOUT, SUPPLY, GROUND
 }pin_type_t;
@@ -27,15 +30,16 @@ typedef struct{
 
 typedef struct{
     void(*init)(component_t *);
-    void(*update)(component_t *, float dt);
+    void(*update)(component_t *, double dt);
 }component_model_t;
 
 typedef struct{
-    pin_t *pins;
+    pin_t **pins;
 }node_t;
 
 typedef struct{
     component_t *components;
+    node_t *nodes;
 }circuit_t;
 
 

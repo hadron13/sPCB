@@ -3,6 +3,8 @@
 #include<glad/gl.h>
 
 
+void simulation_init();
+void simulation_step();
 
 int main(){
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
@@ -35,6 +37,7 @@ int main(){
     SDL_Log("loaded OpenGL version %s", glGetString(GL_VERSION));
     SDL_Log("vendor: %s", glGetString(GL_VENDOR)); 
 
+    simulation_init();
 
     bool running = true;
     while(running){
@@ -49,6 +52,8 @@ int main(){
         glClearColor(0.0, 0.0, 0.0, 1.0); 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        simulation_step();
+        SDL_Delay(700);
 
         SDL_GL_SwapWindow(window);
     }
