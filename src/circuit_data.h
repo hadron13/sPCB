@@ -15,6 +15,14 @@ typedef enum{
 }pin_mode_t;
 
 typedef struct{
+    int x, y;
+}point_t;
+
+typedef struct{
+    int x, y, w, h;
+}rect_t;
+
+typedef struct{
     pin_type_t type;
     pin_mode_t mode;
     float max_current;
@@ -27,10 +35,13 @@ typedef struct{
     uint32_t type;
     void  *data;
     pin_t *pins;
+    rect_t bounding_box;
 }component_t;
 
 typedef struct{
-    void(*init)(component_t *);
+    char *name;
+    char *description;
+    component_t (*init)();
     void(*update)(component_t *, double dt);
 }component_model_t;
 
