@@ -22,7 +22,7 @@ int main(){
     
     float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
 
-    SDL_Window * window = SDL_CreateWindow("title", 800, 600, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
+    SDL_Window * window = SDL_CreateWindow("title", 1200, 800, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
     
     if(window == NULL){
         SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "Could not create a window");
@@ -48,7 +48,12 @@ int main(){
  
     igCreateContext(NULL);
     ImGuiIO* io = igGetIO_Nil(); (void)io;
-    io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     
+    io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; 
+
+#ifdef IMGUI_HAS_DOCK
+    io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+    io->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+#endif    
 
     // Setup Dear ImGui style
     igStyleColorsDark(NULL);
@@ -66,7 +71,7 @@ int main(){
 
     igStyleColorsDark(NULL);
 
-    simulation_init();
+    // simulation_init();
 
     bool running = true;
     bool show_demo_window = true;
@@ -83,21 +88,35 @@ int main(){
         ImGui_ImplSDL3_NewFrame();
         igNewFrame();
 
-        glClearColor(0.0, 0.0, 0.0, 1.0); 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        simulation_step();
+        //simulation_step();
 
         if (show_demo_window)
             igShowDemoWindow(&show_demo_window);
-        // SDL_Delay(700);
+
+        igRender();
+        SDL_GL_MakeCurrent(window, gl_context);
+        glViewport(0, 0, (int)io->DisplaySize.x, (int)io->DisplaySize.y);
+        glClearColor(0.0, 0.0, 0.0, 1.0); 
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
+#ifdef IMGUI_HAS_DOCK
+	if (io->ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            SDL_Window* backup_current_window = SDL_GL_GetCurrentWindow();
+            SDL_GLContext backup_current_context = SDL_GL_GetCurrentContext();
+            igUpdatePlatformWindows();
+            igRenderPlatformWindowsDefault(NULL,NULL);
+            SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
+        }
+#endif
         
         SDL_GL_SwapWindow(window);
     }
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
+    igDestroyContext(NULL);
 
     SDL_GL_DestroyContext(gl_context);
 
