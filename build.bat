@@ -16,8 +16,8 @@ if not exist build\libs\libcimgui.a (
     move cimgui\libcimgui.a build\libs\
 )
 if not exist build\libs\cimgui_impl.o (
-    g++ cimgui\imgui\backends\imgui_impl_sdl3.cpp    -DCIMGUI_USE_SDL3    -DIMGUI_IMPL_API="extern \"C\" __declspec(dllexport)"  -fPIC -c -Icimgui/imgui/backends -Icimgui/imgui -I%SDL3_DIR%/include  -o build\libs\cimgui_impl_sdl3.o 
-    g++ cimgui\imgui\backends\imgui_impl_opengl3.cpp -DCIMGUI_USE_OPENGL3 -DIMGUI_IMPL_API="extern \"C\" __declspec(dllexport)"  -fPIC -c -Icimgui/imgui/backends -Icimgui/imgui -o build\libs\cimgui_impl_opengl3.o 
+    g++ cimgui\imgui\backends\imgui_impl_sdl3.cpp    -DIMGUI_IMPL_API="extern \"C\" __declspec(dllexport)" -c -Icimgui/imgui -I%SDL3_DIR%/include  -o build\libs\cimgui_impl_sdl3.o 
+    g++ cimgui\imgui\backends\imgui_impl_opengl3.cpp -DIMGUI_IMPL_API="extern \"C\" __declspec(dllexport)" -c -Icimgui/imgui -o build\libs\cimgui_impl_opengl3.o 
 )
 if not exist build\libs\glad.o (
     gcc glad/src/gl.c -c -o build/libs/glad.o -I glad/include
