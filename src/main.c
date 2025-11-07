@@ -1,5 +1,6 @@
 
 #include<SDL3/SDL.h>
+#include <SDL3/SDL_oldnames.h>
 #include<glad/gl.h>
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
@@ -9,9 +10,9 @@
 #define CIMGUI_USE_OPENGL3
 #include<cimgui/cimgui_impl.h>
 
+#include"simulation.h"
 
-void simulation_init();
-void simulation_step();
+void gui();
 
 int main(){
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
@@ -22,7 +23,7 @@ int main(){
     
     float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
 
-    SDL_Window * window = SDL_CreateWindow("title", 1200, 800, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
+    SDL_Window * window = SDL_CreateWindow("sPCB", 1200, 800, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
     
     if(window == NULL){
         SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "Could not create a window");
@@ -71,7 +72,7 @@ int main(){
 
     igStyleColorsDark(NULL);
 
-    // simulation_init();
+    simulation_init();
 
     bool running = true;
     bool show_demo_window = true;
@@ -79,17 +80,24 @@ int main(){
 
         SDL_Event event;
         while(SDL_PollEvent(&event)){
-            ImGui_ImplSDL3_ProcessEvent(&event);
             if(event.type == SDL_EVENT_QUIT){
                 running = false;
             }
+            if(event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(window)){
+                running = false;
+            }
+            ImGui_ImplSDL3_ProcessEvent(&event);
         }
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL3_NewFrame();
         igNewFrame();
-
-
-        //simulation_step();
+        static int timer = 0;
+        timer++;
+        if(timer == 165){
+            simulation_step();
+            timer = 0;
+        }
+        gui();
 
         if (show_demo_window)
             igShowDemoWindow(&show_demo_window);
