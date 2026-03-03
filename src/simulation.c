@@ -23,10 +23,6 @@ void dump_chip(component_t *component, int pins){
 simulation_data_t sim;
 component_model_t models[10];
 
-
-
-
-
 void simulation_init(){
     sim.circuit.components = calloc(10, sizeof(component_t));
     sim.circuit.nodes      = calloc(10, sizeof(node_t));
@@ -65,9 +61,17 @@ void simulation_init(){
         .pins = calloc(10, sizeof(pin_t*)),
         .n_pins = 3
     };
+    sim.circuit.nodes[1] = (node_t){
+        .voltage = 0.0,
+        .pins = calloc(10, sizeof(pin_t*)),
+        .n_pins = 2
+    };
     sim.circuit.nodes[0].pins[0] = &sim.circuit.components[0].pins[0];
     sim.circuit.nodes[0].pins[1] = &sim.circuit.components[0].pins[1];
     sim.circuit.nodes[0].pins[2] = &sim.circuit.components[1].pins[1];
+    
+    sim.circuit.nodes[0].pins[0] = &sim.circuit.components[1].pins[3];
+    sim.circuit.nodes[0].pins[1] = &sim.circuit.components[1].pins[2];
 
 }
 

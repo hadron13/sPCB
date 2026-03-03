@@ -97,10 +97,6 @@ void gui(){
 
         igEndMainMenuBar();
     }
-
-
-
-
 }
 
 

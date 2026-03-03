@@ -3,6 +3,7 @@
 #include<stddef.h>
 #include<stdint.h>
 
+
 #define mA (1.0/1000.0)
 #define uA (mA/1000.0)
 
@@ -43,6 +44,7 @@ typedef struct{
     char *description;
     component_t (*init)();
     void(*update)(component_t *, double dt);
+    size_t n_pins;
 }component_model_t;
 
 typedef struct{
@@ -52,8 +54,14 @@ typedef struct{
 }node_t;
 
 typedef struct{
+    size_t n_models;
+    component_model_t *models;
+    size_t n_components;
     component_t *components;
+    size_t n_nodes;
     node_t *nodes;
 }circuit_t;
 
-
+typedef struct{
+    circuit_t circuit;
+}simulation_data_t;
