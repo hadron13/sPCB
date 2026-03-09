@@ -64,4 +64,5 @@ typedef struct{
 
 typedef struct{
     circuit_t circuit;
+    float speed;
 }simulation_data_t;

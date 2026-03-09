@@ -29,6 +29,38 @@ bool centralized_button(const char *label, float width){
 
 bool show_style_editor = false;
 
+bool show_simulation_controls = true;
+
+float speed = 1.0f;
+
+void simulation_controls(){
+    igBegin("Simulation Controls", &show_simulation_controls, ImGuiWindowFlags_None);
+
+    igText("Simulation Speed");
+    igSliderFloat("##Sim_Speed", &speed, 0.1, 1000.0, "%f steps/s", ImGuiSliderFlags_Logarithmic);
+
+    igNewLine();
+
+    igPushStyleColor_U32(ImGuiCol_Button,        0xFF00BB00);
+    igPushStyleColor_U32(ImGuiCol_ButtonHovered, 0xFF00DD00);
+    igPushStyleColor_U32(ImGuiCol_ButtonActive,  0xFF00AA00);
+    igButton("Start", (ImVec2){80.0, 30.0});
+    igPopStyleColor(3);
+
+    igSameLine(0, 10.0f);
+ 
+    igPushStyleColor_U32(ImGuiCol_Button,        0xFF0000BB);
+    igPushStyleColor_U32(ImGuiCol_ButtonHovered, 0xFF0000DD);
+    igPushStyleColor_U32(ImGuiCol_ButtonActive,  0xFF0000AA);
+    igButton("Stop", (ImVec2){80.0, 30.0});
+
+    igPopStyleColor(3);
+
+    igEnd();
+}
+
+
+
 void gui(){
 
     ImGuiIO *io = igGetIO_Nil();
@@ -81,10 +113,15 @@ void gui(){
             } 
             if(igMenuItem_Bool("Import", "Ctrl+I", false, true)){
 
-            }   
+            }
             igEndMenu();
         }
         if(igBeginMenu("Edit", true)){
+            igEndMenu();
+        } 
+        if(igBeginMenu("View", true)){
+
+            if(igMenuItem_BoolPtr("Simulation", "", &show_simulation_controls, true)){ }
             igEndMenu();
         } 
         if(igBeginMenu("Help", true)){
@@ -97,9 +134,10 @@ void gui(){
 
         igEndMainMenuBar();
     }
+
+    if(show_simulation_controls)
+        simulation_controls();
 }
-
-
 
 
 
