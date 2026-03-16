@@ -62,7 +62,7 @@ void simulation_controls(){
 
 
 void gui(){
-
+    
     ImGuiIO *io = igGetIO_Nil();
 
 #ifndef IMGUI_HAS_VIEWPORT

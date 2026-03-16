@@ -11,6 +11,7 @@
 #include<cimgui/cimgui_impl.h>
 
 #include"simulation.h"
+#include"render/render.h"
 
 void gui();
 
@@ -73,6 +74,7 @@ int main(){
     igStyleColorsDark(NULL);
 
     simulation_init();
+    render_init();
 
     bool running = true;
     bool show_demo_window = true;
@@ -118,6 +120,8 @@ int main(){
             SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
         }
 #endif
+
+        render_draw();
         
         SDL_GL_SwapWindow(window);
     }

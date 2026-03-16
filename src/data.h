@@ -3,7 +3,7 @@
 #include<stdlib.h>
 #include<stddef.h>
 #include<stdint.h>
-
+#include<stdbool.h>
 
 typedef enum{
     UNDEFINED, 
@@ -43,6 +43,7 @@ typedef enum{
 
 typedef struct{
     draw_command_type type;
+    uint32_t color;
     union{
         struct{
             point_t start, mid, end;    
@@ -60,8 +61,10 @@ typedef struct{
         }line;
         struct{
             point_t start, end;
+            bool filled;
         }rect;
         struct{
+            pin_style_t style;
             point_t start, end;
         }pin;
         char *text;
