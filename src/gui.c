@@ -33,6 +33,8 @@ bool show_simulation_controls = true;
 
 float speed = 1.0f;
 
+extern SDL_Window* window;
+
 void simulation_controls(){
     igBegin("Simulation Controls", &show_simulation_controls, ImGuiWindowFlags_None);
 
@@ -59,7 +61,17 @@ void simulation_controls(){
     igEnd();
 }
 
+void open_file_callback(void* userdata, const char* const* filelist, int filter){
+    while (*filelist) {
+        SDL_Log("imported file: '%s'", *filelist);
+        filelist++;
+    }
+}
 
+const SDL_DialogFileFilter filters[] = {
+    { "KiCad Schematic",  "kicad_sch" },
+    { "All files",   "*" }
+};
 
 void gui(){
     
@@ -112,7 +124,7 @@ void gui(){
 
             } 
             if(igMenuItem_Bool("Import", "Ctrl+I", false, true)){
-
+                SDL_ShowOpenFileDialog(open_file_callback, NULL, window, filters, SDL_arraysize(filters), NULL, false);
             }
             igEndMenu();
         }
