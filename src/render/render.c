@@ -3,9 +3,11 @@
 #include<stdlib.h>
 #include<stdio.h>
 
+#include<SDL3/SDL.h>
+
 #include"../data.h"
 #include"../../cglm/cglm.h"
-#include "cglm/mat4.h"
+
 
 
 char *load_file(const char *path){
@@ -82,6 +84,10 @@ static unsigned int VBO = 0;
 static unsigned int shader;
 
 void render_init(){
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     float vertices[] = {
     //  position         UV
         0.0f, 1.0f,      0.0f, 0.0f,
@@ -125,10 +131,12 @@ void render_draw_shape(draw_command_t command){
             break;
     }
 
+    float margin = command.stroke.line_width; 
+
     mat4 transform, projection;
     glm_mat4_identity(transform);
-    glm_translate(transform, (vec3){quad_origin.x, quad_origin.y, 0});
-    glm_scale(transform, (vec3){quad_size.x, quad_size.y, 1.0});
+    glm_translate(transform, (vec3){quad_origin.x - margin/2.0f, quad_origin.y - margin/2.0f, 0});
+    glm_scale(transform, (vec3){quad_size.x + margin, quad_size.y + margin, 1.0});
 
     glUseProgram(shader);
     glm_ortho(0, 1200, 800, 0, 0.1, 10.0f, projection);
@@ -137,12 +145,21 @@ void render_draw_shape(draw_command_t command){
     int ploc = glGetUniformLocation(shader, "projection");
     int cloc = glGetUniformLocation(shader, "color");
 
+    int origin_loc = glGetUniformLocation(shader, "origin");
+    int size_loc   = glGetUniformLocation(shader, "size");
+    int thickness_loc = glGetUniformLocation(shader, "thickness");
+
     vec4 color_vec;
-    color_to_vec4(command.color, color_vec);
+    color_to_vec4(command.stroke.color, color_vec);
 
     glUniformMatrix4fv(ploc, 1, false, (float*)projection);
     glUniformMatrix4fv(tloc, 1, false, (float*)transform);
     glUniform4fv(cloc, 1, (float*)color_vec);
+    
+    glUniform2fv(origin_loc, 1, &quad_origin.x);
+    glUniform2fv(size_loc, 1, &quad_size.x);
+    
+    glUniform1f(thickness_loc, command.stroke.line_width);
 
 
 
@@ -153,14 +170,19 @@ void render_draw_shape(draw_command_t command){
 
 void render_draw(){ 
 
+    float t = (double)SDL_GetTicks()/1000.0f;
+
     draw_command_t test = {
         .type = DRAW_RECTANGLE,
-        .color = 0xFF0000FF,
+        .stroke = {
+            .color = 0xFF0000FF,
+            .line_width = 30.0f 
+        },
         .data.rect = {
-            .start = {100, 000},
-            .end = {400, 400}
+            .start = {100, 100},
+            .end = {500, 500}
         }
     };
-
+    // for(int i = 0; i < 10000; i++)
     render_draw_shape(test);
 }

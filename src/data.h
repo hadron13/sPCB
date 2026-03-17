@@ -39,11 +39,21 @@ typedef struct{
 
 typedef enum{
     DRAW_ARC, DRAW_CIRCLE, DRAW_CURVE, DRAW_LINE, DRAW_RECTANGLE, DRAW_TEXT, DRAW_PIN
-}draw_command_type;
+}draw_command_type_t;
+
+typedef enum{
+    STYLE_SOLID, STYLE_DASHED, STYLE_DOTTED 
+}line_style_t;
 
 typedef struct{
-    draw_command_type type;
-    uint32_t color;
+    draw_command_type_t type;
+    struct{
+        uint32_t color;
+        uint32_t fill_color;
+        float line_width;
+        line_style_t line_style;
+        bool fill;
+    }stroke;
     union{
         struct{
             point_t start, mid, end;    

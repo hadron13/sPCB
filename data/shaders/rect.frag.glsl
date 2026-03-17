@@ -1,8 +1,12 @@
 #version 330
 
-
-uniform vec4 color;
+layout(origin_upper_left) in vec4 gl_FragCoord;
 in vec2 texCoord;
+
+uniform vec2 origin;
+uniform vec2 size;
+uniform float thickness;
+uniform vec4 color;
 
 
 float sdRoundedBox( in vec2 p, in vec2 b, in vec4 r ){
@@ -13,6 +17,7 @@ float sdRoundedBox( in vec2 p, in vec2 b, in vec4 r ){
 }
 
 void main(){
-    float d = sdRoundedBox(texCoord-0.5, vec2(0.5, 0.5), vec4(0.1));
-    gl_FragColor = d < 0.0? color : vec4(0);
+    float d = sdRoundedBox(gl_FragCoord.xy - origin - size*0.5, size*0.5, vec4(thickness/4.0f)) ;
+    d = abs(d) - thickness/2.0f;
+    gl_FragColor = d < 0.0? color : vec4(0.5);
 }
