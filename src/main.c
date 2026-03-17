@@ -13,6 +13,8 @@
 #include"simulation.h"
 #include"render/render.h"
 
+SDL_Window * window;
+
 void gui();
 
 int main(){
@@ -24,7 +26,7 @@ int main(){
     
     float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
 
-    SDL_Window * window = SDL_CreateWindow("sPCB", 1200, 800, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
+    window = SDL_CreateWindow("sPCB", 1200, 800, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
     
     if(window == NULL){
         SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "Could not create a window");

@@ -7,15 +7,6 @@
 #include"../../cglm/cglm.h"
 #include "cglm/mat4.h"
 
-const float quad_verts[] = {
-    0.0, 0.0,
-    1.0, 0.0,
-    0.0, 1.0,
-    0.0, 1.0,
-    1.0, 0.0,
-    1.0, 1.0
-};
-
 
 char *load_file(const char *path){
     FILE *file = fopen(path, "rb");
@@ -77,7 +68,13 @@ int shader_compile(const char *vertex_path, const char *fragment_path){
     return program;
 }
 
-
+// 0xRRGGBBAA -> {R, G, B, A}
+void color_to_vec4(uint32_t color, float *vec){
+    vec[0] = (float)((color >> 24) & 0xFF)/255.0f;
+    vec[1] = (float)((color >> 16) & 0xFF)/255.0f;
+    vec[2] = (float)((color >> 8 ) & 0xFF)/255.0f;
+    vec[3] = (float)((color      ) & 0xFF)/255.0f;
+}
 
 
 static unsigned int VAO = 0;
@@ -109,7 +106,7 @@ void render_init(){
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
     
-    shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/circle.frag.glsl");
+    shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/rect.frag.glsl");
 }
 
 void render_draw_shape(draw_command_t command){   
@@ -123,6 +120,7 @@ void render_draw_shape(draw_command_t command){
             quad_size.x = command.data.rect.end.x - command.data.rect.start.x;
             quad_size.y = command.data.rect.end.y - command.data.rect.start.y;
             break;
+
         default:
             break;
     }
@@ -135,13 +133,16 @@ void render_draw_shape(draw_command_t command){
     glUseProgram(shader);
     glm_ortho(0, 1200, 800, 0, 0.1, 10.0f, projection);
 
-
-
     int tloc = glGetUniformLocation(shader, "transform");
     int ploc = glGetUniformLocation(shader, "projection");
+    int cloc = glGetUniformLocation(shader, "color");
+
+    vec4 color_vec;
+    color_to_vec4(command.color, color_vec);
 
     glUniformMatrix4fv(ploc, 1, false, (float*)projection);
     glUniformMatrix4fv(tloc, 1, false, (float*)transform);
+    glUniform4fv(cloc, 1, (float*)color_vec);
 
 
 
@@ -154,9 +155,9 @@ void render_draw(){
 
     draw_command_t test = {
         .type = DRAW_RECTANGLE,
-        .color = 0xFF0000,
+        .color = 0xFF0000FF,
         .data.rect = {
-            .start = {100, 100},
+            .start = {100, 000},
             .end = {400, 400}
         }
     };
