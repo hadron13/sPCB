@@ -21,3 +21,4 @@ void main(){
     d = abs(d) - thickness/2.0f;
     gl_FragColor = d < 0.0? color : vec4(0.5);
 }
+

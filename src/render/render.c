@@ -2,6 +2,7 @@
 #include<stdint.h>
 #include<stdlib.h>
 #include<stdio.h>
+#include<math.h>
 
 #include<SDL3/SDL.h>
 
@@ -48,7 +49,7 @@ int compile_shader_stage(int type, const char *path) {
     if (!success) {
         char shader_log[1024];
         glGetShaderInfoLog(shader, 1024, NULL, shader_log);
-        printf("Shader compilation failed: %s\n", shader_log);
+        printf("Shader compilation failed [%s]: %s\n", path, shader_log);
     }
     return shader;
 }
@@ -83,6 +84,10 @@ static unsigned int VAO = 0;
 static unsigned int VBO = 0;
 static unsigned int shader;
 
+static GLuint rect_shader;
+static GLuint circle_shader;
+static GLuint line_shader;
+
 void render_init(){
 
     glEnable(GL_BLEND);
@@ -112,61 +117,91 @@ void render_init(){
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
     
-    shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/rect.frag.glsl");
+    rect_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/rect.frag.glsl");
+    circle_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/circle.frag.glsl");
+    line_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/line.frag.glsl");
 }
 
 void render_draw_shape(draw_command_t command){   
-    
 
+    int shader_id;
     point_t quad_origin, quad_size;
+
+    float t = (double)SDL_GetTicks()/1000.0f;
+    float rotation = 3.14159/4.0;
+    rotation = 0;
+    float margin = command.stroke.line_width; 
+
+    vec4 color_vec;
+    color_to_vec4(command.stroke.color, color_vec);
 
     switch(command.type){
         case DRAW_RECTANGLE:
             quad_origin = command.data.rect.start;
             quad_size.x = command.data.rect.end.x - command.data.rect.start.x;
             quad_size.y = command.data.rect.end.y - command.data.rect.start.y;
+            shader_id = rect_shader;
             break;
+        case DRAW_CIRCLE:
+            quad_origin = command.data.circle.center;
+            quad_origin.x -= command.data.circle.radius;
+            quad_origin.y -= command.data.circle.radius;
+            
+            float diam = command.data.circle.radius * 2.0f;
+            quad_size = (point_t){diam, diam};
 
+            shader_id = circle_shader;
+            break;
+        case DRAW_LINE:
+            float dist = hypot(command.data.line.end.x - command.data.line.start.x,
+                               command.data.line.end.y - command.data.line.start.y);            
+            
+            quad_origin = command.data.line.start;
+            quad_size.x = command.data.line.end.x - command.data.line.start.x;
+            quad_size.y = command.data.line.end.y - command.data.line.start.y; 
+            shader_id = line_shader;
+            
+            
+            
+            glUseProgram(shader_id);
+            int line_start_loc = glGetUniformLocation(shader_id, "line_start");
+            int line_end_loc = glGetUniformLocation(shader_id, "line_end");
+            break;
         default:
             break;
     }
 
-    float margin = command.stroke.line_width; 
-
     mat4 transform, projection;
-    glm_mat4_identity(transform);
-    glm_translate(transform, (vec3){quad_origin.x - margin/2.0f, quad_origin.y - margin/2.0f, 0});
-    glm_scale(transform, (vec3){quad_size.x + margin, quad_size.y + margin, 1.0});
+    glm_translate_make(transform, (vec3){quad_origin.x - margin/2.0f, quad_origin.y - margin/2.0f, 0});
+    
+    glm_translate(transform, (vec3){(quad_size.x + margin)/2.0f,  (quad_size.y + margin)/2.0f, 0});
+    glm_rotate(transform, rotation, (vec3){0, 0, 1.0});
+    glm_translate(transform, (vec3){-(quad_size.x + margin)/2.0f, -(quad_size.y + margin)/2.0f, 0});
 
-    glUseProgram(shader);
+    glm_scale(transform, (vec3){quad_size.x + margin, quad_size.y + margin, 1.0});
+    
     glm_ortho(0, 1200, 800, 0, 0.1, 10.0f, projection);
 
-    int tloc = glGetUniformLocation(shader, "transform");
-    int ploc = glGetUniformLocation(shader, "projection");
-    int cloc = glGetUniformLocation(shader, "color");
-
-    int origin_loc = glGetUniformLocation(shader, "origin");
-    int size_loc   = glGetUniformLocation(shader, "size");
-    int thickness_loc = glGetUniformLocation(shader, "thickness");
-
-    vec4 color_vec;
-    color_to_vec4(command.stroke.color, color_vec);
+    glUseProgram(shader_id);
+    int tloc = glGetUniformLocation(shader_id, "transform");
+    int ploc = glGetUniformLocation(shader_id, "projection");
+    int cloc = glGetUniformLocation(shader_id, "color");
+    int origin_loc = glGetUniformLocation(shader_id, "quad_origin");
+    int size_loc   = glGetUniformLocation(shader_id, "quad_size");
+    int thickness_loc = glGetUniformLocation(shader_id, "thickness");
 
     glUniformMatrix4fv(ploc, 1, false, (float*)projection);
     glUniformMatrix4fv(tloc, 1, false, (float*)transform);
     glUniform4fv(cloc, 1, (float*)color_vec);
-    
     glUniform2fv(origin_loc, 1, &quad_origin.x);
     glUniform2fv(size_loc, 1, &quad_size.x);
-    
     glUniform1f(thickness_loc, command.stroke.line_width);
-
-
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
+//volatile int caganeira;
 
 void render_draw(){ 
 
@@ -183,6 +218,30 @@ void render_draw(){
             .end = {500, 500}
         }
     };
+    draw_command_t test2 = {
+        .type = DRAW_CIRCLE,
+        .stroke = {
+            .color = 0xFF0000FF,
+            .line_width = 40.0f 
+        },
+        .data.circle = {
+            .center = {500, 500},
+            .radius = 200
+        }
+    };
+    draw_command_t test3 = {
+        .type = DRAW_LINE,
+        .stroke = {
+            .color = 0xFF0000FF,
+            .line_width = 30.0f 
+        },
+        .data.line = {
+            .start = {300, 100},
+            .end = {300, 300}
+        }
+    };
     // for(int i = 0; i < 10000; i++)
     render_draw_shape(test);
+    render_draw_shape(test2);
+    render_draw_shape(test3);
 }

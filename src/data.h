@@ -38,7 +38,7 @@ typedef struct{
 }point_t;
 
 typedef enum{
-    DRAW_ARC, DRAW_CIRCLE, DRAW_CURVE, DRAW_LINE, DRAW_RECTANGLE, DRAW_TEXT, DRAW_PIN
+    DRAW_ARC, DRAW_CIRCLE, DRAW_POLYGON, DRAW_LINE, DRAW_RECTANGLE, DRAW_TEXT, DRAW_PIN
 }draw_command_type_t;
 
 typedef enum{
@@ -63,16 +63,15 @@ typedef struct{
             float radius;
         }circle;
         struct{
-            uint32_t n_points;
-            point_t *points;
-        }curve;
-        struct{
             point_t start, end;
         }line;
         struct{
             point_t start, end;
-            bool filled;
         }rect;
+        struct{
+            uint32_t n_points;
+            point_t *points;
+        }polygon;
         struct{
             pin_style_t style;
             point_t start, end;

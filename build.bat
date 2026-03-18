@@ -23,4 +23,4 @@ if not exist build\libs\glad.o (
     gcc glad/src/gl.c -c -o build/libs/glad.o -I glad/include
 )
 
-gcc src/*.c  build/libs/*.o -o build/spcb.exe -lSDL3 -lcimgui -mwindows -Iglad/include -I%SDL3_DIR%/include -I. -Lbuild -Lbuild/libs -lstdc++
+gcc src/*.c src/render/*.c build/libs/*.o -o build/spcb.exe -lSDL3 -lcimgui -mwindows -Iglad/include -I%SDL3_DIR%/include -I. -Lbuild -Lbuild/libs -lstdc++
