@@ -128,8 +128,7 @@ void render_draw_shape(draw_command_t command){
     point_t quad_origin, quad_size;
 
     float t = (double)SDL_GetTicks()/1000.0f;
-    float rotation = 3.14159/4.0;
-    rotation = t;
+    float rotation = 0;
     float margin = command.stroke.line_width; 
 
     vec4 color_vec;
@@ -155,14 +154,19 @@ void render_draw_shape(draw_command_t command){
         case DRAW_LINE:
             
             quad_origin = command.data.line.start; 
-            quad_size.x = command.data.line.end.x - command.data.line.start.x;
-            quad_size.y = command.data.line.end.y - command.data.line.start.y; 
+            float xrel = command.data.line.end.x - command.data.line.start.x;
+            float yrel = command.data.line.end.y - command.data.line.start.y;
+            float dist = hypot(xrel, yrel);
 
-            float dist = hypot(command.data.line.end.x - command.data.line.start.x,
-                               command.data.line.end.y - command.data.line.start.y);            
+            quad_size = (point_t){0, dist};
+
+            rotation = atan2(xrel, yrel);
 
             shader_id = line_shader;
             break;
+        case DRAW_ARC:
+
+            break;  
         default:
             break;
     }
@@ -170,13 +174,13 @@ void render_draw_shape(draw_command_t command){
     mat4 transform, projection;
     glm_translate_make(transform, (vec3){quad_origin.x - margin/2.0f, quad_origin.y - margin/2.0f, 0});
     
-    glm_translate(transform, (vec3){(quad_size.x + margin)/2.0f,  (quad_size.y + margin)/2.0f, 0});
-    glm_rotate(transform, rotation, (vec3){0, 0, 1.0});
-    glm_translate(transform, (vec3){-(quad_size.x + margin)/2.0f, -(quad_size.y + margin)/2.0f, 0});
+    glm_translate(transform, (vec3){(margin)/2.0f,  ( margin)/2.0f, 0});
+    glm_rotate(transform, rotation, (vec3){0, 0, -1.0});
+    glm_translate(transform, (vec3){-(margin)/2.0f, -(margin)/2.0f, 0});
 
     glm_scale(transform, (vec3){quad_size.x + margin, quad_size.y + margin, 1.0});
     
-    glm_ortho(0, 1200, 800, 0, 0.1, 10.0f, projection);
+    glm_ortho(-600, 600, 400, -400, 0.1, 10.0f, projection);
 
     glUseProgram(shader_id);
     int tloc = glGetUniformLocation(shader_id, "transform");
@@ -200,7 +204,7 @@ void render_draw_shape(draw_command_t command){
 
 void render_draw(){ 
 
-    float t = (double)SDL_GetTicks()/1000.0f;
+    float t = (double)SDL_GetTicks()/5000.0f;
 
     draw_command_t test = {
         .type = DRAW_RECTANGLE,
@@ -209,8 +213,8 @@ void render_draw(){
             .line_width = 30.0f 
         },
         .data.rect = {
-            .start = {100, 100},
-            .end = {500, 500}
+            .start = {-100, -100},
+            .end = {100, 100}
         }
     };
     draw_command_t test2 = {
@@ -227,16 +231,20 @@ void render_draw(){
     draw_command_t test3 = {
         .type = DRAW_LINE,
         .stroke = {
-            .color = 0xFF0000FF,
-            .line_width = 30.0f 
+            .color = 0x00FF00FF,
+            .line_width = 5.0f 
         },
         .data.line = {
-            .start = {300, 200},
-            .end = {300, 400 + sin(t) * 100.0f}
+            .start = {300, 300},
+            .end = {600, 300}
         }
     };
-    // for(int i = 0; i < 10000; i++)
+    // if(rand()%5== 1){
+    //     SDL_Log("x %f y %f", sin(t), cos(t));
+    // }
+
+    //for(int i = 0; i < 10000; i++)
     render_draw_shape(test);
-    render_draw_shape(test2);
+    //render_draw_shape(test2);
     render_draw_shape(test3);
 }
