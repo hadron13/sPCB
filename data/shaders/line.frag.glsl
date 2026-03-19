@@ -7,18 +7,23 @@ uniform vec2 quad_origin;
 uniform vec2 quad_size;
 uniform float thickness;
 uniform vec4 color;
+uniform vec4 line;
+uniform mat4 transform;
 
 
-float sdRoundedBox( in vec2 p, in vec2 b, in vec4 r ){
-    r.xy = (p.x>0.0)?r.xy : r.zw;
-    r.x  = (p.y>0.0)?r.x  : r.y;
-    vec2 q = abs(p)-b+r.x;
-    return min(max(q.x,q.y),0.0) + length(max(q,0.0)) - r.x;
+float sdSegment( in vec2 p, in vec2 a, in vec2 b ){
+    vec2 pa = p-a, ba = b-a;
+    float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
+    return length( pa - ba*h );
 }
 
+
 void main(){
-    float d = sdRoundedBox(gl_FragCoord.xy - quad_origin - quad_size*0.5, quad_size*0.5, vec4(thickness/4.0f)) ;
-    d = abs(d) - thickness/2.0f;
+    vec2 uv = texCoord * (quad_size + thickness)-thickness/2.0;
+
+    float d = sdSegment(uv, vec2(0), quad_size);
+    d -= thickness/2.0f;
+    
     gl_FragColor = d < 0.0? color : vec4(0.5);
 }
 

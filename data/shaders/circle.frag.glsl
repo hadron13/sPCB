@@ -13,7 +13,9 @@ float sdCircle( vec2 p, float r ){
 }
 
 void main(){
-    float d = sdCircle(gl_FragCoord.xy - quad_origin - quad_size*0.5, quad_size.x*0.5) ;
+    vec2 uv = texCoord * (quad_size + thickness)-thickness/2.0;
+
+    float d = sdCircle(uv - quad_size*0.5, quad_size.x*0.5) ;
     d = abs(d) - thickness/2.0f;
     gl_FragColor = d < 0.0? color : vec4(0.5);
 }

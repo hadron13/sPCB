@@ -95,13 +95,13 @@ void render_init(){
 
     float vertices[] = {
     //  position         UV
-        0.0f, 1.0f,      0.0f, 0.0f,
-        0.0f, 0.0f,      0.0f, 1.0f,
-        1.0f, 0.0f,      1.0f, 1.0f,
+        0.0f, 1.0f,      0.0f, 1.0f,
+        0.0f, 0.0f,      0.0f, 0.0f,
+        1.0f, 0.0f,      1.0f, 0.0f,
 
-        0.0f, 1.0f,      0.0f, 0.0f,
-        1.0f, 0.0f,      1.0f, 1.0f,
-        1.0f, 1.0f,      1.0f, 0.0f
+        0.0f, 1.0f,      0.0f, 1.0f,
+        1.0f, 0.0f,      1.0f, 0.0f,
+        1.0f, 1.0f,      1.0f, 1.0f
     };
 
     glGenVertexArrays(1, &VAO);
@@ -129,7 +129,7 @@ void render_draw_shape(draw_command_t command){
 
     float t = (double)SDL_GetTicks()/1000.0f;
     float rotation = 3.14159/4.0;
-    rotation = 0;
+    rotation = t;
     float margin = command.stroke.line_width; 
 
     vec4 color_vec;
@@ -153,19 +153,15 @@ void render_draw_shape(draw_command_t command){
             shader_id = circle_shader;
             break;
         case DRAW_LINE:
-            float dist = hypot(command.data.line.end.x - command.data.line.start.x,
-                               command.data.line.end.y - command.data.line.start.y);            
             
-            quad_origin = command.data.line.start;
+            quad_origin = command.data.line.start; 
             quad_size.x = command.data.line.end.x - command.data.line.start.x;
             quad_size.y = command.data.line.end.y - command.data.line.start.y; 
+
+            float dist = hypot(command.data.line.end.x - command.data.line.start.x,
+                               command.data.line.end.y - command.data.line.start.y);            
+
             shader_id = line_shader;
-            
-            
-            
-            glUseProgram(shader_id);
-            int line_start_loc = glGetUniformLocation(shader_id, "line_start");
-            int line_end_loc = glGetUniformLocation(shader_id, "line_end");
             break;
         default:
             break;
@@ -201,7 +197,6 @@ void render_draw_shape(draw_command_t command){
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-//volatile int caganeira;
 
 void render_draw(){ 
 
@@ -236,8 +231,8 @@ void render_draw(){
             .line_width = 30.0f 
         },
         .data.line = {
-            .start = {300, 100},
-            .end = {300, 300}
+            .start = {300, 200},
+            .end = {300, 400 + sin(t) * 100.0f}
         }
     };
     // for(int i = 0; i < 10000; i++)
