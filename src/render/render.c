@@ -88,6 +88,10 @@ static GLuint rect_shader;
 static GLuint circle_shader;
 static GLuint line_shader;
 
+static int zoom;
+static vec2 offset;
+static mat4 projection;
+
 void render_init(){
 
     glEnable(GL_BLEND);
@@ -116,10 +120,24 @@ void render_init(){
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    glm_ortho(-600, 600, 400, -400, 0.1, 10.0f, projection);
     
     rect_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/rect.frag.glsl");
     circle_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/circle.frag.glsl");
     line_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/line.frag.glsl");
+}
+
+void render_mouse_scroll(int ticks){
+    zoom += ticks;
+    
+    double scale = pow(1.1, (double)-zoom);
+
+    glm_ortho(-600.0 * scale, 600.0 * scale, 400.0 * scale, -400.0 * scale, 0.1, 10.0f, projection);
+}
+void render_mouse_drag(float x, float y){
+    double scale = pow(1.1, (double)-zoom);
+
 }
 
 void render_draw_shape(draw_command_t command){   
@@ -171,7 +189,7 @@ void render_draw_shape(draw_command_t command){
             break;
     }
 
-    mat4 transform, projection;
+    mat4 transform;
     glm_translate_make(transform, (vec3){quad_origin.x - margin/2.0f, quad_origin.y - margin/2.0f, 0});
     
     glm_translate(transform, (vec3){(margin)/2.0f,  ( margin)/2.0f, 0});
@@ -180,7 +198,6 @@ void render_draw_shape(draw_command_t command){
 
     glm_scale(transform, (vec3){quad_size.x + margin, quad_size.y + margin, 1.0});
     
-    glm_ortho(-600, 600, 400, -400, 0.1, 10.0f, projection);
 
     glUseProgram(shader_id);
     int tloc = glGetUniformLocation(shader_id, "transform");
@@ -200,6 +217,7 @@ void render_draw_shape(draw_command_t command){
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
+
 
 
 void render_draw(){ 

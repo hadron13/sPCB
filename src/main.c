@@ -1,5 +1,6 @@
 
 #include<SDL3/SDL.h>
+#include <SDL3/SDL_events.h>
 #include <SDL3/SDL_oldnames.h>
 #include<glad/gl.h>
 
@@ -80,16 +81,47 @@ int main(){
 
     bool running = true;
     bool show_demo_window = true;
+
+    bool mouse_left_pressed = false, mouse_right_pressed = false, mouse_middle_pressed = false;
+
     while(running){
 
         SDL_Event event;
         while(SDL_PollEvent(&event)){
-            if(event.type == SDL_EVENT_QUIT){
-                running = false;
+            switch(event.type){
+                case SDL_EVENT_QUIT:
+                    running = false;
+                    break;
+                case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+                    if(event.window.windowID == SDL_GetWindowID(window))
+                        running = false;
+                    break;
+                case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                    switch(event.button.button){
+                        case 1: mouse_left_pressed   = true; break;
+                        case 2: mouse_middle_pressed = true; break;
+                        case 3: mouse_right_pressed  = true; break;
+                    }
+                    break;
+                case SDL_EVENT_MOUSE_BUTTON_UP:
+                    switch(event.button.button){
+                        case 1: mouse_left_pressed   = false; break;
+                        case 2: mouse_middle_pressed = false; break;
+                        case 3: mouse_right_pressed  = false; break;
+                    }
+                    break;
+                case SDL_EVENT_MOUSE_WHEEL:
+                    render_mouse_scroll(event.wheel.integer_y);
+                    break;
+                case SDL_EVENT_MOUSE_MOTION:
+                    if(mouse_middle_pressed || mouse_right_pressed)
+                        render_mouse_drag(event.motion.yrel, event.motion.xrel);
+                    break;
+
             }
-            if(event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(window)){
-                running = false;
-            }
+            
+
+            
             ImGui_ImplSDL3_ProcessEvent(&event);
         }
         ImGui_ImplOpenGL3_NewFrame();
