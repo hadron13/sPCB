@@ -115,15 +115,17 @@ int main(){
                     break;
                 case SDL_EVENT_MOUSE_MOTION:
                     if(mouse_middle_pressed || mouse_right_pressed)
-                        render_mouse_drag(event.motion.yrel, event.motion.xrel);
+                        render_mouse_drag(event.motion.xrel, event.motion.yrel);
+                    break;
+                case SDL_EVENT_WINDOW_RESIZED:
+                    render_update_resolution(event.window.data1, event.window.data2);
                     break;
 
             }
-            
-
-            
             ImGui_ImplSDL3_ProcessEvent(&event);
         }
+
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL3_NewFrame();
         igNewFrame();

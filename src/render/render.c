@@ -1,3 +1,4 @@
+#include "src/render/render.h"
 #include<glad/gl.h>
 #include<stdint.h>
 #include<stdlib.h>
@@ -89,7 +90,8 @@ static GLuint circle_shader;
 static GLuint line_shader;
 
 static int zoom;
-static vec2 offset;
+static point_t offset;
+static point_t window_size;
 static mat4 projection;
 
 void render_init(){
@@ -121,6 +123,7 @@ void render_init(){
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    window_size = (point_t){1200, 800};
     glm_ortho(-600, 600, 400, -400, 0.1, 10.0f, projection);
     
     rect_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/rect.frag.glsl");
@@ -128,17 +131,30 @@ void render_init(){
     line_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/line.frag.glsl");
 }
 
+void update_projection(){
+    double scale = pow(1.1, (double)-zoom);
+    glm_ortho((float)-window_size.x/2.0f * scale - offset.x, 
+              (float) window_size.x/2.0f * scale - offset.x, 
+              (float) window_size.y/2.0f * scale - offset.y, 
+              (float)-window_size.y/2.0f * scale - offset.y, 0.1, 10.0f, projection);
+}
+
 void render_mouse_scroll(int ticks){
     zoom += ticks;
-    
-    double scale = pow(1.1, (double)-zoom);
-
-    glm_ortho(-600.0 * scale, 600.0 * scale, 400.0 * scale, -400.0 * scale, 0.1, 10.0f, projection);
+    update_projection();
 }
 void render_mouse_drag(float x, float y){
     double scale = pow(1.1, (double)-zoom);
-
+    offset.x += x * scale;
+    offset.y += y * scale;
+    update_projection();
 }
+
+void render_update_resolution(int x, int y){
+    window_size = (point_t){x, y};
+    update_projection();
+}
+
 
 void render_draw_shape(draw_command_t command){   
 
