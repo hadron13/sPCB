@@ -44,7 +44,7 @@
 			(at 0 0 0)
 			(effects
 				(font
-					(size 1.27 1.27)
+					(size 1.27 1.27l)
 				)
 				(hide yes)
 			)

@@ -89,6 +89,7 @@ typedef struct{
     pin_type_t *pin_modes;
 }component_t;
 
+
 typedef struct{
     uint64_t id;
     char *name;
@@ -98,9 +99,7 @@ typedef struct{
     draw_command_t *render_data;
 }component_model_t;
 
-typedef struct{
-    int a;
-}network_t;
+
 
 typedef struct{
     component_t *components;

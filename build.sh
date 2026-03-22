@@ -14,4 +14,4 @@ if [ ! -f build/libs/libcimgui.a ]; then
     mv cimgui/libcimgui.a build/libs
 fi
 
-clang src/*.c src/render/*.c build/libs/*.o glad/src/gl.c -o build/spcb -lSDL3 -lcimgui -lm -lGL -lstdc++ -Iglad/include -I. -Lbuild/libs
+clang src/*.c src/render/*.c src/parser/*.c build/libs/*.o glad/src/gl.c -O0 -g -o build/spcb -lSDL3 -lcimgui -lm -lGL -lstdc++ -Iglad/include -I. -Lbuild/libs

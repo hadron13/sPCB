@@ -1,4 +1,3 @@
-#include "src/circuit_data.h"
 #include<SDL3/SDL.h>
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include<cimgui/cimgui.h>
@@ -87,33 +86,32 @@ void gui(){
     igSetNextWindowSize(io->DisplaySize, ImGuiCond_Always);
 #endif
 
-
-    igBegin("main", NULL, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings);
-
-    circuit_t *circuit = simulation_circuit();
-   
-    for(int j = 0; j < 2; j++){
-        component_t *component = &circuit->components[j];
-        for(int i = 0; i < 7; i++){
-            igSetCursorPosX(200);
-            igSetCursorPosY(i * 10 + j * 100);
-            igText("%.2f", component->pins[i].voltage);
-            igSetCursorPosY(i * 10 + j * 100);
-            igSetCursorPosX(240);
-            igText("%i", i);
-        }
-        for(int i = 7; i < 14; i++){
-            igSetCursorPosY((13 - i) * 10 + j * 100);
-            igSetCursorPosX(280);
-            igText("%i", i);
-            igSetCursorPosX(300);
-            igSetCursorPosY((13 - i) * 10 + j * 100);
-            igText("%.2f", component->pins[i].voltage);
-        }
-    }
-
-
-    igEnd();
+   //  igBegin("main", NULL, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings);
+   //
+   //  circuit_t *circuit = simulation_circuit();
+   // 
+   //  for(int j = 0; j < 2; j++){
+   //      component_t *component = &circuit->components[j];
+   //      for(int i = 0; i < 7; i++){
+   //          igSetCursorPosX(200);
+   //          igSetCursorPosY(i * 10 + j * 100);
+   //          igText("%.2f", component->pins[i].voltage);
+   //          igSetCursorPosY(i * 10 + j * 100);
+   //          igSetCursorPosX(240);
+   //          igText("%i", i);
+   //      }
+   //      for(int i = 7; i < 14; i++){
+   //          igSetCursorPosY((13 - i) * 10 + j * 100);
+   //          igSetCursorPosX(280);
+   //          igText("%i", i);
+   //          igSetCursorPosX(300);
+   //          igSetCursorPosY((13 - i) * 10 + j * 100);
+   //          igText("%.2f", component->pins[i].voltage);
+   //      }
+   //  }
+   //
+   //
+   //  igEnd();
 
     if(igBeginMainMenuBar()){
         if(igBeginMenu("File", true)){

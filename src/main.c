@@ -13,6 +13,7 @@
 
 #include"simulation.h"
 #include"render/render.h"
+#include"parser/parser.h"
 
 SDL_Window * window;
 
@@ -78,6 +79,7 @@ int main(){
 
     simulation_init();
     render_init();
+    parse_schematic("test.kicad_sch");
 
     bool running = true;
     bool show_demo_window = true;

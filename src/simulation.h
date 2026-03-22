@@ -1,5 +1,5 @@
 #pragma once
-#include"circuit_data.h"
+#include"data.h"
 
 void simulation_init();
 void simulation_step();
