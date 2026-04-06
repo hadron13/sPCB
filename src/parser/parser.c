@@ -155,6 +155,7 @@ void parse_schematic(char *path){
     parse_context_t ctx = {file};
     parse_value_t val = parse_expression(&ctx);
     
+    
 
 }
 

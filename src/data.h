@@ -38,7 +38,7 @@ typedef struct{
 }point_t;
 
 typedef enum{
-    DRAW_ARC, DRAW_CIRCLE, DRAW_POLYGON, DRAW_LINE, DRAW_RECTANGLE, DRAW_TEXT, DRAW_PIN
+    DRAW_ARC, DRAW_CIRCLE, DRAW_POLYGON, DRAW_BEZIER, DRAW_LINE, DRAW_RECTANGLE, DRAW_TEXT, DRAW_PIN
 }draw_command_type_t;
 
 typedef enum{
@@ -71,7 +71,7 @@ typedef struct{
         struct{
             uint32_t n_points;
             point_t *points;
-        }polygon;
+        }polygon, bezier;
         struct{
             pin_style_t style;
             point_t start, end;
@@ -89,6 +89,17 @@ typedef struct{
     pin_type_t *pin_modes;
 }component_t;
 
+typedef struct{
+    uint16_t number;
+    pin_style_t style;
+    pin_type_t type;
+}schematic_pin_t;
+
+typedef struct{
+    point_t          placement;
+    draw_command_t  *shapes;
+    schematic_pin_t *pins;
+}schematic_component_t;
 
 typedef struct{
     uint64_t id;
@@ -96,15 +107,21 @@ typedef struct{
     uint16_t n_pins;
     void(*create)(component_t *);
     void(*update)(component_t *, double dt);
-    draw_command_t *render_data;
-}component_model_t;
-
+}logical_component_model_t;
 
 
 typedef struct{
-    component_t *components;
+    logical_component_model_t  *model;
+    schematic_component_t *schematic_components;
+    void  *state;
+    float *pin_voltages;
+    float *pin_currents;
+}logical_component_t;
 
-}circuit_t;
+typedef struct{
+    logical_component_model_t *logical_models;
+    logical_component_t *logical_components;
+}schematic_t;
 
 
 
