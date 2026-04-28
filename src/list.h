@@ -20,6 +20,7 @@
 #ifndef LIST_H
 #define LIST_H
 
+#include <SDL3/SDL_log.h>
 #include<stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -70,6 +71,7 @@ static void *list__init(size_t element_size, size_t elements){
 
 static void *list__resize(void *list, size_t element_size, size_t new_ammount) {
     list_header(list)->capacity = new_ammount;
+    // SDL_Log("realloc - %zuB x %zu + %zu = %zu", element_size, new_ammount, sizeof(list_header_t), (element_size * new_ammount) + sizeof(list_header_t));
     return (list_header_t*)realloc(list_header(list), (element_size * new_ammount) + sizeof(list_header_t)) + 1;
 }
 

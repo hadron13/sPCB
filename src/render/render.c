@@ -8,6 +8,7 @@
 #include<SDL3/SDL.h>
 
 #include"../data.h"
+#include"../list.h"
 #include"../../cglm/cglm.h"
 
 
@@ -94,7 +95,12 @@ static point_t offset;
 static point_t window_size;
 static mat4 projection;
 
+draw_command_t *drawable_test(char *path);
+draw_command_t *commands;
+
 void render_init(){
+    commands = drawable_test("test22.kicad_sym");
+    SDL_Log("commands: %i", list_size(commands));
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -170,6 +176,17 @@ void render_draw_shape(draw_command_t command){
 
     switch(command.type){
         case DRAW_RECTANGLE:
+            if(command.data.rect.end.x < command.data.rect.start.x){
+                float temp = command.data.rect.start.x;
+                command.data.rect.start.x = command.data.rect.end.x;
+                command.data.rect.end.x = temp;
+            }
+            if(command.data.rect.end.y < command.data.rect.start.y){
+                float temp = command.data.rect.start.y;
+                command.data.rect.start.y = command.data.rect.end.y;
+                command.data.rect.end.y = temp;
+            }
+
             quad_origin = command.data.rect.start;
             quad_size.x = command.data.rect.end.x - command.data.rect.start.x;
             quad_size.y = command.data.rect.end.y - command.data.rect.start.y;
@@ -277,8 +294,9 @@ void render_draw(){
     //     SDL_Log("x %f y %f", sin(t), cos(t));
     // }
 
-    //for(int i = 0; i < 10000; i++)
-    render_draw_shape(test);
+    for(int i = 0; i < list_size(commands); i++){
+        render_draw_shape(commands[i]);
+    }
     //render_draw_shape(test2);
     render_draw_shape(test3);
 }

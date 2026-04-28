@@ -5,6 +5,8 @@
 #include<stdint.h>
 #include<stdbool.h>
 
+#include"hashmap.h"
+
 typedef enum{
     UNDEFINED, 
     INPUT,
@@ -80,6 +82,8 @@ typedef struct{
     }data;
 }draw_command_t;
 
+
+/*
 typedef struct{
     uint64_t model_id;
     float x, y, angle;
@@ -122,6 +126,59 @@ typedef struct{
     logical_component_model_t *logical_models;
     logical_component_t *logical_components;
 }schematic_t;
+=======
+    draw_command_t *render_data;
+}component_model_t;
+*/
+
+typedef struct{
+    uint32_t symbol_type_id;
+    uint32_t component_id;
+    point_t  position;
+    float    rotation;
+}symbol_t;
+
+typedef struct{
+    void *state;
+    float *pin_voltages;
+}component_t;
+
+typedef struct{
+    uint32_t net_id;
+    draw_command_t *draw_commands;
+}wire_t;
+
+typedef struct{
+    symbol_t *symbols;
+    wire_t *wires;
+}schematic_t;
+
+//KiCad 'sub'symbol
+typedef struct{
+    draw_command_t *draw_commands;
+}symbol_type_t;
+
+//KiCad symbol
+typedef struct{
+    char *name;
+    symbol_type_t *symbol_types;
+}component_type_t;
+
+typedef struct{
+    float *pins; 
+}net_t;
+
+//based on KiCad format
+typedef struct{
+    uint32_t version;
+    
+    component_type_t *symbol_library;
+    schematic_t *schematics;
+    component_t *components;
+
+
+
+}circuit_t;
 
 
 

@@ -32,12 +32,14 @@ int main(){
     
     if(window == NULL){
         SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "Could not create a window");
+        return -1;
     }
 
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
 
     if(gl_context == NULL){
         SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "Could not create an OpenGL context");
+        return -1;
     }
 
     
@@ -47,6 +49,7 @@ int main(){
     
     if(gladLoadGL(SDL_GL_GetProcAddress) == 0){
         SDL_LogError(SDL_LOG_CATEGORY_GPU, "Could not load OpenGL");
+        return -1;
     }
 
     SDL_Log("loaded OpenGL version %s", glGetString(GL_VERSION));
@@ -77,9 +80,12 @@ int main(){
 
     igStyleColorsDark(NULL);
 
+    // parse_schematic("D:\\sPCB\\led\\led.kicad_sch");
+    parse_schematic("/home/pico/development/spcb/led/led.kicad_sch");
+
     simulation_init();
     render_init();
-    parse_schematic("test.kicad_sch");
+
 
     bool running = true;
     bool show_demo_window = true;
