@@ -41,14 +41,14 @@ typedef struct{
 
 typedef enum{
     DRAW_ARC, DRAW_CIRCLE, DRAW_POLYGON, DRAW_BEZIER, DRAW_LINE, DRAW_RECTANGLE, DRAW_TEXT, DRAW_PIN
-}draw_command_type_t;
+}shape_type_t;
 
 typedef enum{
     STYLE_SOLID, STYLE_DASHED, STYLE_DOTTED 
 }line_style_t;
 
 typedef struct{
-    draw_command_type_t type;
+    shape_type_t type;
     struct{
         uint32_t color;
         uint32_t fill_color;
@@ -80,7 +80,7 @@ typedef struct{
         }pin;
         char *text;
     }data;
-}draw_command_t;
+}shape_t;
 
 
 /*
@@ -101,7 +101,7 @@ typedef struct{
 
 typedef struct{
     point_t          placement;
-    draw_command_t  *shapes;
+    shape_t  *shapes;
     schematic_pin_t *pins;
 }schematic_component_t;
 
@@ -127,7 +127,7 @@ typedef struct{
     logical_component_t *logical_components;
 }schematic_t;
 =======
-    draw_command_t *render_data;
+    shape_t *render_data;
 }component_model_t;
 */
 
@@ -145,7 +145,7 @@ typedef struct{
 
 typedef struct{
     uint32_t net_id;
-    draw_command_t *draw_commands;
+    shape_t *draw_commands;
 }wire_t;
 
 typedef struct{
@@ -155,7 +155,7 @@ typedef struct{
 
 //KiCad 'sub'symbol
 typedef struct{
-    draw_command_t *draw_commands;
+    shape_t *draw_commands;
 }symbol_type_t;
 
 //KiCad symbol
@@ -168,16 +168,17 @@ typedef struct{
     float *pins; 
 }net_t;
 
-//based on KiCad format
+//unified schematic data 
+//based on KiCad schematic file format
 typedef struct{
     uint32_t version;
+    char *path;
     
     component_type_t *symbol_library;
     schematic_t *schematics;
     component_t *components;
 
-
-
+    shape_t *wires;
 }circuit_t;
 
 

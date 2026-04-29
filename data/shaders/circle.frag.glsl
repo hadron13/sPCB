@@ -17,5 +17,5 @@ void main(){
 
     float d = sdCircle(uv - quad_size*0.5, quad_size.x*0.5) ;
     d = abs(d) - thickness/2.0f;
-    gl_FragColor = d < 0.0? color : vec4(0.5);
+    gl_FragColor = d < 0.0? color : vec4(0.0);
 }

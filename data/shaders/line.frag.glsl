@@ -24,6 +24,6 @@ void main(){
     float d = sdSegment(uv, vec2(0), quad_size);
     d -= thickness/2.0f;
     
-    gl_FragColor = d < 0.0? color : vec4(0.5);
+    gl_FragColor = d < 0.0? color : vec4(0.0);
 }
 

@@ -95,12 +95,12 @@ static point_t offset;
 static point_t window_size;
 static mat4 projection;
 
-draw_command_t *drawable_test(char *path);
-draw_command_t *commands;
+// shape_t *drawable_test(char *path);
+// shape_t *commands;
 
 void render_init(){
-    commands = drawable_test("test22.kicad_sym");
-    SDL_Log("commands: %i", list_size(commands));
+    // commands = drawable_test("test22.kicad_sym");
+    // SDL_Log("commands: %i", list_size(commands));
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -162,7 +162,7 @@ void render_update_resolution(int x, int y){
 }
 
 
-void render_draw_shape(draw_command_t command){   
+void render_draw_shape(shape_t command){   
 
     int shader_id;
     point_t quad_origin, quad_size;
@@ -257,7 +257,7 @@ void render_draw(){
 
     float t = (double)SDL_GetTicks()/5000.0f;
 
-    draw_command_t test = {
+    shape_t test = {
         .type = DRAW_RECTANGLE,
         .stroke = {
             .color = 0xFF0000FF,
@@ -268,7 +268,7 @@ void render_draw(){
             .end = {100, 100}
         }
     };
-    draw_command_t test2 = {
+    shape_t test2 = {
         .type = DRAW_CIRCLE,
         .stroke = {
             .color = 0xFF0000FF,
@@ -279,7 +279,7 @@ void render_draw(){
             .radius = 200
         }
     };
-    draw_command_t test3 = {
+    shape_t test3 = {
         .type = DRAW_LINE,
         .stroke = {
             .color = 0x00FF00FF,
@@ -294,9 +294,19 @@ void render_draw(){
     //     SDL_Log("x %f y %f", sin(t), cos(t));
     // }
 
-    for(int i = 0; i < list_size(commands); i++){
-        render_draw_shape(commands[i]);
-    }
+    // for(int i = 0; i < list_size(commands); i++){
+    //     render_draw_shape(commands[i]);
+    // }
     //render_draw_shape(test2);
     render_draw_shape(test3);
 }
+
+
+void render_draw_circuit(circuit_t *circuit){
+
+    for(int i = 0; i < list_size(circuit->wires); i++){
+        render_draw_shape(circuit->wires[i]);
+    }
+
+}
+

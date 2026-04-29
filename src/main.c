@@ -1,4 +1,5 @@
 
+#include "src/data.h"
 #include<SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_oldnames.h>
@@ -81,7 +82,7 @@ int main(){
     igStyleColorsDark(NULL);
 
     // parse_schematic("D:\\sPCB\\led\\led.kicad_sch");
-    parse_schematic("/home/pico/development/spcb/led/led.kicad_sch");
+    circuit_t circuit = parse_schematic("/home/pico/development/spcb/led/led.kicad_sch");
 
     simulation_init();
     render_init();
@@ -165,7 +166,7 @@ int main(){
         }
 #endif
 
-        render_draw();
+        render_draw_circuit(&circuit);
         
         SDL_GL_SwapWindow(window);
     }

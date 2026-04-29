@@ -22,5 +22,5 @@ void main(){
     float d = sdRoundedBox(uv - quad_size * 0.5, quad_size*0.5, vec4(thickness/4.0f)) ;
     d = abs(d) - thickness/2.0f;
     
-    gl_FragColor = d < 0.0? color : vec4(0.5);
+    gl_FragColor = d < 0.0? color : vec4(0.0);
 }
