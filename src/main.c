@@ -78,7 +78,7 @@ int main(){
 
     ImFontConfig *font_config = ImFontConfig_ImFontConfig();
 
-    ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/JetBrainsMono-Regular.ttf", 0, font_config, NULL);
+    ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/JetBrainsMonoNLNerdFont-Regular.ttf", 0, font_config, NULL);
 
     ImGui_ImplSDL3_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init("#version 150");
@@ -165,7 +165,7 @@ int main(){
         ImVec2 pos = {window_pos.x + 50.0f, window_pos.y + 50.0f};
 
         // ImDrawList_AddText_Vec2(fg, pos, col, "Caganero bicicleteiro", NULL);
-        ImDrawList_AddText_FontPtr(fg, igGetDefaultFont(), 50, pos, col, "Test!", NULL, 0, NULL);
+        ImDrawList_AddText_FontPtr(fg, igGetDefaultFont(), 50, pos, col, "Test! \ueda1", NULL, 0, NULL);
 
 
 
