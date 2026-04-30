@@ -203,10 +203,33 @@ void debug_print_parse_value(parse_value_t value){
     }
 }
 
+
+// (whatever X Y) format
+point_t parse_position(parse_value_t parse_value){
+    if(list_size(parse_value.children) < 2)
+        return (point_t){0, 0};
+
+    return (point_t){
+        parse_value.children[0].number,
+        parse_value.children[1].number,
+    };
+}
+
+point_t flip_y(point_t point){
+    return (point_t){point.x, -point.y};
+}
+point_t flip_x(point_t point){
+    return (point_t){-point.x, point.y};
+}
+point_t flip_xy(point_t point){
+    return (point_t){-point.x, -point.y};
+}
+
 void add_symbol_type_to_library(parse_value_t parse_value, circuit_t *circuit);
 void add_unit_to_symbol_type(parse_value_t parse_value, symbol_type_t *type);
 void add_wire(parse_value_t parse_value, circuit_t *circuit);
 void add_shape_to_list(parse_value_t parse_value, shape_t **list);
+
 
 circuit_t parse_schematic(char *path){
     
@@ -272,6 +295,10 @@ circuit_t parse_schematic(char *path){
         }
         if(strcmp(val.identifier, "wire") == 0){
             // debug_print_parse_value_recursive(val);
+            //
+            
+            parse_value_t pts = val.children[0];
+
             shape_t wire_shape = {
                 .type = DRAW_LINE,
                 .stroke = {
@@ -279,15 +306,8 @@ circuit_t parse_schematic(char *path){
                     .line_width = 0.25f 
                 },
                 .data.line = {
-                    // (wire  (pts      ( xy           X/Y ) ) )
-                    .start = {
-                        val.children[0].children[0].children[0].number,                     
-                        val.children[0].children[0].children[1].number,
-                    },
-                    .end = {
-                        val.children[0].children[1].children[0].number,                     
-                        val.children[0].children[1].children[1].number,
-                    }
+                    .start = parse_position(pts.children[0]),
+                    .end = parse_position(pts.children[1])
                 }
             };
             list_push(circuit.wires, wire_shape);
@@ -374,7 +394,7 @@ void add_unit_to_symbol_type(parse_value_t parse_value, symbol_type_t *type){
 
     sscanf(strchr(parse_value.children[0].string, '_'), "_%i_%i", &unit_number, &style_number);
     
-    SDL_Log("\t\tadding %i shapes to %s", list_size(parse_value.children), parse_value.children[0].string);
+    SDL_Log("\t\tadding %zu shapes to %s", list_size(parse_value.children), parse_value.children[0].string);
 
     unit_type_t unit = {
         .graphics = list_init(shape_t)
@@ -397,7 +417,7 @@ void add_shape_to_list(parse_value_t parse_value, shape_t **list){
         shape_t circle = {
             .type = DRAW_CIRCLE,
             .data.circle = {
-                .center = (point_t){parse_value.children[0].children[0].number, parse_value.children[0].children[1].number},
+                .center = parse_position(parse_value.children[0]),
                 .radius = parse_value.children[1].children[0].number
             },
             .stroke = {
@@ -413,8 +433,8 @@ void add_shape_to_list(parse_value_t parse_value, shape_t **list){
         shape_t rect = {
             .type = DRAW_RECTANGLE,
             .data.rect = {
-                .start = (point_t){parse_value.children[0].children[0].number, parse_value.children[0].children[1].number},
-                .end = (point_t){parse_value.children[1].children[0].number, parse_value.children[1].children[1].number}
+                .start = flip_y(parse_position(parse_value.children[0])),
+                .end = flip_y(parse_position(parse_value.children[1]))
             },
             .stroke = {
                 .color = 0x00FF00FF,
@@ -426,16 +446,62 @@ void add_shape_to_list(parse_value_t parse_value, shape_t **list){
         
         list_push(*list, rect);
         
-    }else if(strcmp(parse_value.identifier, "polyline") == 0){
+    }else if(strcmp(parse_value.identifier, "polyline") == 0){ 
 
+        parse_value_t pts = parse_value.children[0];
+        SDL_assert(pts.type == VALUE_GROUP && strcmp(pts.identifier, "pts") == 0);
 
-
-        for(int i = 0; i < list_size(parse_value.children); i++){
-            
+        for(int i = 1; i < list_size(pts.children); i++){
+            shape_t line = {
+                .type = DRAW_LINE,
+                .stroke = {
+                    .color = 0x00FF00FF,
+                    .line_width = 0.25f 
+                },
+                .data.line = {
+                    .start = flip_y(parse_position(pts.children[i-1])),
+                    .end = flip_y(parse_position(pts.children[i]))
+                }
+            };
+            list_push(*list, line);
         }
 
+    }else if(strcmp(parse_value.identifier, "pin") == 0){
 
-    }else{
+        SDL_assert(parse_value.type == VALUE_GROUP && parse_value.children[2].type == VALUE_GROUP);
+        point_t at = flip_y(parse_position(parse_value.children[2]));
+        int rotation = (int)parse_value.children[2].children[2].number;
+        float length = parse_value.children[3].children[0].number;
+       
+        point_t end = at;
+
+        switch(rotation){
+            case 0:
+                end = (point_t){at.x + length, at.y};
+                break;
+            case 90:
+                end = (point_t){at.x, at.y - length};
+                break;
+            case 180:
+                end = (point_t){at.x - length, at.y};
+                break;
+            case 270:
+                end = (point_t){at.x, at.y + length};
+                break;
+        }
+
+        shape_t line = {
+            .type = DRAW_LINE,
+            .stroke = {
+                .color = 0x00FF00FF,
+                .line_width = 0.25f 
+            },
+            .data.line = {
+                .start = at,
+                .end = end,
+            }
+        };
+        list_push(*list, line);
 
     }
 

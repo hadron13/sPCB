@@ -319,8 +319,10 @@ void render_draw_circuit(circuit_t *circuit){
     }
 
     for(int i = 0; i < list_size(circuit->symbol_library); i++){
-        for(int j = 0; j < list_size(circuit->symbol_library[i].units[0].graphics); j++){
-            render_draw_shape(circuit->symbol_library[i].units[0].graphics[j], (point_t){10.0f * i});
+        for(int j = 0; j < list_size(circuit->symbol_library[i].units); j++){
+            for(int k = 0; k < list_size(circuit->symbol_library[i].units[j].graphics); k++){
+                render_draw_shape(circuit->symbol_library[i].units[j].graphics[k], (point_t){20.0f * i});
+            }
         }
     }
 
