@@ -1,9 +1,8 @@
 #include"parser.h"
-#include <SDL3/SDL_log.h>
+#include <SDL3/SDL.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <SDL3/SDL_assert.h>
 #include "../list.h"
 #include "src/data.h"
 
@@ -86,12 +85,10 @@ parse_value_t parse_expression(parse_context_t *ctx){
         value.identifier = copy_token_advance(ctx);
         value.children = list_init(parse_value_t);
 
-
-
         while(*ctx->p != ')' && *ctx->p != '\0'){
-            if(strcmp(value.identifier, "lib_symbols") == 0){
+            //if(strcmp(value.identifier, "lib_symbols") == 0){
                 // debug_print_val = true;
-            }
+            //}
             parse_value_t child_value = parse_expression(ctx);
             list_push(value.children, child_value);
             while(isspace(*ctx->p)) ctx->p++; 
@@ -206,38 +203,47 @@ void debug_print_parse_value(parse_value_t value){
     }
 }
 
-void add_component_type_to_library(parse_value_t parse_value, circuit_t *circuit);
-void add_symbol_to_component_type(parse_value_t parse_value, component_type_t *type);
-void add_draw_command(shape_t **list, parse_value_t val);
+void add_symbol_type_to_library(parse_value_t parse_value, circuit_t *circuit);
+void add_unit_to_symbol_type(parse_value_t parse_value, symbol_type_t *type);
 void add_wire(parse_value_t parse_value, circuit_t *circuit);
+void add_shape_to_list(parse_value_t parse_value, shape_t **list);
 
 circuit_t parse_schematic(char *path){
     
+    circuit_t circuit;
     char *file = load_file(path);
-    if(file == NULL)
-        return (circuit_t){};
 
-    SDL_Log("Parsing file %s", path);
-    
+    if(file == NULL){
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not load file at path %s", path);
+        return circuit;
+    }
+        
+
+    SDL_Log("Parsing file %s ...", path);
+    uint64_t start_time = SDL_GetPerformanceCounter();
+
     parse_context_t ctx = {file};
     parse_value_t parsed_output = parse_expression(&ctx);
+
+    uint64_t time_spent = SDL_GetPerformanceCounter() - start_time;  
+    SDL_Log("Parsed file in %f seconds", (double)time_spent / SDL_GetPerformanceFrequency());
 
     free(file);
 
     
     if(strcmp(parsed_output.identifier, "kicad_sch") != 0){
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Expected schematic as input!");
-        return (circuit_t){};
+        return circuit;
     }
     
-    SDL_Log("Interpreting file parse output");
+    SDL_Log("Interpreting file parse output...");
 
-    circuit_t circuit = {
+    circuit = (circuit_t){
         .path = str_dup(path),
-        .symbol_library = list_init(component_type_t),
-        .schematics = list_init(schematic_t),
+        .symbol_library = list_init(symbol_type_t),
         .components = list_init(component_t),
         .wires = list_init(shape_t),
+        .junctions = list_init(shape_t),
     };
 
 
@@ -260,18 +266,16 @@ circuit_t parse_schematic(char *path){
                     continue;
                 
 
-                add_component_type_to_library(val.children[j], &circuit);
+                add_symbol_type_to_library(val.children[j], &circuit);
             }
             continue;
         }
         if(strcmp(val.identifier, "wire") == 0){
-
             // debug_print_parse_value_recursive(val);
-
             shape_t wire_shape = {
                 .type = DRAW_LINE,
                 .stroke = {
-                    .color = 0xFF0000FF,
+                    .color = 0x00FF00FF,
                     .line_width = 0.25f 
                 },
                 .data.line = {
@@ -286,10 +290,38 @@ circuit_t parse_schematic(char *path){
                     }
                 }
             };
-
-
             list_push(circuit.wires, wire_shape);
+            continue;
         }
+        if(strcmp(val.identifier, "junction") == 0){
+            // debug_print_parse_value_recursive(val);
+            shape_t junction_shape = {
+                .type = DRAW_CIRCLE,
+                .stroke = {
+                    .color = 0x00FF00FF,
+                    .line_width = 0.5f 
+                },
+                .data.circle = {
+                    // (junction  (at       X/Y  ) )
+                    .center = {
+                        val.children[0].children[0].number,                     
+                        val.children[0].children[1].number,
+                    },
+                    .radius = 0.25f
+                }
+            };
+            list_push(circuit.junctions, junction_shape);
+            continue;
+        }
+        if(strcmp(val.identifier, "symbol") == 0){
+            // debug_print_parse_value_recursive(val);
+            
+            char *lib_id = val.children[0].children[0].string;
+            SDL_Log("adding instance of %s", lib_id);
+            
+            continue;
+        }
+
     }
 
     free_expression(parsed_output);
@@ -297,58 +329,76 @@ circuit_t parse_schematic(char *path){
     return circuit;
 }
 
-void add_component_type_to_library(parse_value_t parse_value, circuit_t *circuit){
+void add_symbol_type_to_library(parse_value_t parse_value, circuit_t *circuit){
     //debug_print_parse_value(parse_value);
     
     if(parse_value.type != VALUE_GROUP)
         return;
     SDL_assert(strcmp(parse_value.identifier, "symbol") == 0);
 
-    component_type_t new_component;
+    symbol_type_t new_symbol = {
+        .units = list_init(unit_type_t)
+    };
 
     for(int i = 0; i < list_size(parse_value.children); i++){
         parse_value_t val = parse_value.children[i];
         //debug_print_parse_value(val);
         switch(val.type){
             case VALUE_STRING:
-                new_component.name = str_dup(val.string);
-                SDL_Log("adding component type %s", new_component.name);
+                new_symbol.name = str_dup(val.string);
+                SDL_Log("adding component type %s", new_symbol.name);
                 break;
 
             case VALUE_GROUP:
-                
                 //SDL_Log("%s", val.children[j].identifier);
                 
                 if(strcmp(val.identifier, "symbol"))
                     continue;
                 
-                SDL_Log("\tadding subsymbol %s", val.children[0].string);
-                
+
+
+                add_unit_to_symbol_type(val, &new_symbol);
+
                 break;
             default: break;
         }
 
     }
-    list_push(circuit->symbol_library, new_component);
+    list_push(circuit->symbol_library, new_symbol);
 }
 
-void add_symbol_to_component_type(parse_value_t parse_value, component_type_t *type){
+void add_unit_to_symbol_type(parse_value_t parse_value, symbol_type_t *type){
+    SDL_Log("\tadding unit|style %s", parse_value.children[0].string);
+  
+    int unit_number, style_number;
 
+    sscanf(strchr(parse_value.children[0].string, '_'), "_%i_%i", &unit_number, &style_number);
+    
+    SDL_Log("\t\tadding %i shapes to %s", list_size(parse_value.children), parse_value.children[0].string);
 
+    unit_type_t unit = {
+        .graphics = list_init(shape_t)
+    }; 
+
+    for(int i = 1; i < list_size(parse_value.children); i++){
+        add_shape_to_list(parse_value.children[i], &unit.graphics);
+    }
+
+    list_push(type->units, unit);
 }
 
 
-void add_draw_command(shape_t **list, parse_value_t val){
-    if(val.type != VALUE_GROUP){
+void add_shape_to_list(parse_value_t parse_value, shape_t **list){
+    if(parse_value.type != VALUE_GROUP){
         return;
     }
     
-    if(strcmp(val.identifier, "circle") == 0){
+    if(strcmp(parse_value.identifier, "circle") == 0){
         shape_t circle = {
             .type = DRAW_CIRCLE,
             .data.circle = {
-                .center = (point_t){val.children[0].children[0].number, val.children[0].children[1].number},
-                .radius = val.children[1].children[0].number
+                .center = (point_t){parse_value.children[0].children[0].number, parse_value.children[0].children[1].number},
+                .radius = parse_value.children[1].children[0].number
             },
             .stroke = {
                 .color = 0x00FF00FF,
@@ -359,12 +409,12 @@ void add_draw_command(shape_t **list, parse_value_t val){
         };
 
         list_push(*list, circle);
-    }else if(strcmp(val.identifier, "rectangle") == 0){
+    }else if(strcmp(parse_value.identifier, "rectangle") == 0){
         shape_t rect = {
             .type = DRAW_RECTANGLE,
             .data.rect = {
-                .start = (point_t){val.children[0].children[0].number, val.children[0].children[1].number},
-                .end = (point_t){val.children[1].children[0].number, val.children[1].children[1].number}
+                .start = (point_t){parse_value.children[0].children[0].number, parse_value.children[0].children[1].number},
+                .end = (point_t){parse_value.children[1].children[0].number, parse_value.children[1].children[1].number}
             },
             .stroke = {
                 .color = 0x00FF00FF,
@@ -376,12 +426,17 @@ void add_draw_command(shape_t **list, parse_value_t val){
         
         list_push(*list, rect);
         
-    }else if(strcmp(val.identifier, "polyline") == 0){
+    }else if(strcmp(parse_value.identifier, "polyline") == 0){
+
+
+
+        for(int i = 0; i < list_size(parse_value.children); i++){
+            
+        }
+
 
     }else{
-        for(int i = 0; i < list_size(val.children); i++){
-            add_draw_command(list, val.children[i]);
-        }
+
     }
 
 }
@@ -396,7 +451,7 @@ shape_t *drawable_test(char *path){
 
     shape_t *commands = list_init(shape_t);
 
-    add_draw_command(&commands, val);
+    //add_draw_command(&commands, val);
 
     return commands;
 }

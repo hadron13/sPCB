@@ -4,6 +4,7 @@
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_oldnames.h>
 #include<glad/gl.h>
+#include <wchar.h>
 
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include<cimgui/cimgui.h>
@@ -81,7 +82,8 @@ int main(){
 
     igStyleColorsDark(NULL);
 
-    // parse_schematic("D:\\sPCB\\led\\led.kicad_sch");
+    // circuit_t circuit = parse_schematic("D:\\sPCB\\led\\led.kicad_sch");
+    //circuit_t circuit = parse_schematic("D:\\sPCB\\test3.kicad_sch");
     circuit_t circuit = parse_schematic("/home/pico/development/spcb/led/led.kicad_sch");
 
     simulation_init();
@@ -141,19 +143,32 @@ int main(){
         static int timer = 0;
         timer++;
         if(timer == 165){
-            simulation_step();
+            //simulation_step();
             timer = 0;
         }
-        gui();
 
-        if (show_demo_window)
-            igShowDemoWindow(&show_demo_window);
+        // ImDrawList* fg = igGetForegroundDrawList_ViewportPtr(igGetMainViewport());
+        // ImVec2 pos = {10.0f, 10.0f};
+        // ImU32 col  = 0xFFFFFFFF;
+        // ImDrawList_AddText_Vec2(fg, pos, col, "Drawn without any window!", NULL);
+
+        gui();
+       
+
+
+
+
+        //if (show_demo_window)
+        //    igShowDemoWindow(&show_demo_window);
 
         igRender();
         SDL_GL_MakeCurrent(window, gl_context);
         glViewport(0, 0, (int)io->DisplaySize.x, (int)io->DisplaySize.y);
-        glClearColor(0.0, 0.0, 0.0, 1.0); 
+        glClearColor(0.1, 0.0, 0.0, 1.0); 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // render_draw_circuit(&circuit);
+
         ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
 #ifdef IMGUI_HAS_DOCK
 	if (io->ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -166,7 +181,7 @@ int main(){
         }
 #endif
 
-        render_draw_circuit(&circuit);
+
         
         SDL_GL_SwapWindow(window);
     }

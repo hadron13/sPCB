@@ -98,6 +98,8 @@ static mat4 projection;
 // shape_t *drawable_test(char *path);
 // shape_t *commands;
 
+void update_projection();
+
 void render_init(){
     // commands = drawable_test("test22.kicad_sym");
     // SDL_Log("commands: %i", list_size(commands));
@@ -129,9 +131,13 @@ void render_init(){
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+
     window_size = (point_t){1200, 800};
     glm_ortho(-600, 600, 400, -400, 0.1, 10.0f, projection);
     
+    zoom = 10.0;
+    update_projection();
+
     rect_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/rect.frag.glsl");
     circle_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/circle.frag.glsl");
     line_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/line.frag.glsl");
@@ -162,7 +168,7 @@ void render_update_resolution(int x, int y){
 }
 
 
-void render_draw_shape(shape_t command){   
+void render_draw_shape(shape_t command, point_t offset){   
 
     int shader_id;
     point_t quad_origin, quad_size;
@@ -224,6 +230,7 @@ void render_draw_shape(shape_t command){
 
     mat4 transform;
     glm_translate_make(transform, (vec3){quad_origin.x - margin/2.0f, quad_origin.y - margin/2.0f, 0});
+    glm_translate(transform, (vec3){offset.x, offset.y, 0});
     
     glm_translate(transform, (vec3){(margin)/2.0f,  ( margin)/2.0f, 0});
     glm_rotate(transform, rotation, (vec3){0, 0, -1.0});
@@ -298,14 +305,23 @@ void render_draw(){
     //     render_draw_shape(commands[i]);
     // }
     //render_draw_shape(test2);
-    render_draw_shape(test3);
+    // render_draw_shape(test3);
 }
 
 
 void render_draw_circuit(circuit_t *circuit){
 
     for(int i = 0; i < list_size(circuit->wires); i++){
-        render_draw_shape(circuit->wires[i]);
+        render_draw_shape(circuit->wires[i], (point_t){0, 0});
+    }
+    for(int i = 0; i < list_size(circuit->junctions); i++){
+        render_draw_shape(circuit->junctions[i], (point_t){0, 0});
+    }
+
+    for(int i = 0; i < list_size(circuit->symbol_library); i++){
+        for(int j = 0; j < list_size(circuit->symbol_library[i].units[0].graphics); j++){
+            render_draw_shape(circuit->symbol_library[i].units[0].graphics[j], (point_t){10.0f * i});
+        }
     }
 
 }

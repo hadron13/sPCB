@@ -47,6 +47,7 @@ typedef enum{
     STYLE_SOLID, STYLE_DASHED, STYLE_DOTTED 
 }line_style_t;
 
+//generic graphical component
 typedef struct{
     shape_type_t type;
     struct{
@@ -83,54 +84,6 @@ typedef struct{
 }shape_t;
 
 
-/*
-typedef struct{
-    uint64_t model_id;
-    float x, y, angle;
-    void *state;
-    uint16_t n_pins;
-    float *pin_voltages;
-    pin_type_t *pin_modes;
-}component_t;
-
-typedef struct{
-    uint16_t number;
-    pin_style_t style;
-    pin_type_t type;
-}schematic_pin_t;
-
-typedef struct{
-    point_t          placement;
-    shape_t  *shapes;
-    schematic_pin_t *pins;
-}schematic_component_t;
-
-typedef struct{
-    uint64_t id;
-    char *name;
-    uint16_t n_pins;
-    void(*create)(component_t *);
-    void(*update)(component_t *, double dt);
-}logical_component_model_t;
-
-
-typedef struct{
-    logical_component_model_t  *model;
-    schematic_component_t *schematic_components;
-    void  *state;
-    float *pin_voltages;
-    float *pin_currents;
-}logical_component_t;
-
-typedef struct{
-    logical_component_model_t *logical_models;
-    logical_component_t *logical_components;
-}schematic_t;
-=======
-    shape_t *render_data;
-}component_model_t;
-*/
-
 typedef struct{
     uint32_t symbol_type_id;
     uint32_t component_id;
@@ -143,26 +96,17 @@ typedef struct{
     float *pin_voltages;
 }component_t;
 
+//KiCad Unit
 typedef struct{
-    uint32_t net_id;
-    shape_t *draw_commands;
-}wire_t;
+    shape_t *graphics;
+    shape_t *pins;
+}unit_type_t;
 
-typedef struct{
-    symbol_t *symbols;
-    wire_t *wires;
-}schematic_t;
-
-//KiCad 'sub'symbol
-typedef struct{
-    shape_t *draw_commands;
-}symbol_type_t;
-
-//KiCad symbol
+//KiCad Symbol
 typedef struct{
     char *name;
-    symbol_type_t *symbol_types;
-}component_type_t;
+    unit_type_t *units;
+}symbol_type_t;
 
 typedef struct{
     float *pins; 
@@ -174,11 +118,11 @@ typedef struct{
     uint32_t version;
     char *path;
     
-    component_type_t *symbol_library;
-    schematic_t *schematics;
+    symbol_type_t *symbol_library;
     component_t *components;
 
     shape_t *wires;
+    shape_t *junctions;
 }circuit_t;
 
 
