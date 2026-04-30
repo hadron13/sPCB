@@ -76,6 +76,10 @@ int main(){
     io->ConfigDpiScaleFonts = true;          
     io->ConfigDpiScaleViewports = true;      
 
+    ImFontConfig *font_config = ImFontConfig_ImFontConfig();
+
+    ImFontAtlas_AddFontFromFileTTF(io->Fonts, "data/fonts/JetBrainsMono-Regular.ttf", 0, font_config, NULL);
+
     ImGui_ImplSDL3_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init("#version 150");
 
@@ -147,27 +151,40 @@ int main(){
             timer = 0;
         }
 
-        // ImDrawList* fg = igGetForegroundDrawList_ViewportPtr(igGetMainViewport());
-        // ImVec2 pos = {10.0f, 10.0f};
-        // ImU32 col  = 0xFFFFFFFF;
-        // ImDrawList_AddText_Vec2(fg, pos, col, "Drawn without any window!", NULL);
 
-        gui();
+        // gui();
        
 
 
+        ImDrawList* fg = igGetForegroundDrawList_ViewportPtr(NULL);
+        ImU32 col  = 0xFFFFFFFF;
 
 
-        //if (show_demo_window)
-        //    igShowDemoWindow(&show_demo_window);
+        ImVec2 window_pos, window_size;
+        igGetWindowPos(&window_pos);
+        ImVec2 pos = {window_pos.x + 50.0f, window_pos.y + 50.0f};
 
-        igRender();
+        // ImDrawList_AddText_Vec2(fg, pos, col, "Caganero bicicleteiro", NULL);
+        ImDrawList_AddText_FontPtr(fg, igGetDefaultFont(), 50, pos, col, "Test!", NULL, 0, NULL);
+
+
+
+
+        if (show_demo_window)
+           igShowDemoWindow(&show_demo_window);
+
         SDL_GL_MakeCurrent(window, gl_context);
         glViewport(0, 0, (int)io->DisplaySize.x, (int)io->DisplaySize.y);
-        glClearColor(0.1, 0.0, 0.0, 1.0); 
+        glClearColor(0.0, 0.0, 0.1, 1.0); 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // render_draw_circuit(&circuit);
+
+        {
+            igRender();
+            render_draw_circuit(&circuit);
+        }
+
+
 
         ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
 #ifdef IMGUI_HAS_DOCK
