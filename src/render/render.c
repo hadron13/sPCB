@@ -320,7 +320,9 @@ void render_draw(){
 void render_draw_symbol(symbol_type_t *library, symbol_t *symbol){
     symbol_type_t type = library[symbol->lib_index]; 
     
-    if(symbol->cached_unit == NULL || (type.has_common_units && symbol->cached_common_unit == NULL )){
+    if((symbol->cached_unit == NULL && list_size(type.units) > 1) || (type.has_common_units && symbol->cached_common_unit == NULL)){
+        // SDL_Log("caching %s of unit %i style %i", type.name, symbol->unit, symbol->style);
+
         for(int i = 0; i < list_size(type.units); i++){
             unit_type_t *unit = &type.units[i];
             
@@ -329,9 +331,9 @@ void render_draw_symbol(symbol_type_t *library, symbol_t *symbol){
                 continue;
             }
             if(unit->unit == symbol->unit){
-                if(symbol->style == 0){
+                if(unit->style == 0){
                     symbol->cached_common_unit = unit;
-                    break;
+                    continue;
                 }else if(unit->style == symbol->style){ 
                     symbol->cached_unit = unit;
                     break;

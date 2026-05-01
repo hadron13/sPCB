@@ -398,8 +398,8 @@ void add_symbol_type_to_library(parse_value_t parse_value, circuit_t *circuit){
                 break;
             default: break;
         }
-
     }
+
     list_push(circuit->symbol_library, new_symbol);
 }
 
