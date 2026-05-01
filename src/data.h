@@ -84,12 +84,7 @@ typedef struct{
 }shape_t;
 
 
-typedef struct{
-    uint32_t symbol_type_id;
-    uint32_t component_id;
-    point_t  position;
-    float    rotation;
-}symbol_t;
+
 
 typedef struct{
     void *state;
@@ -98,6 +93,8 @@ typedef struct{
 
 //KiCad Unit
 typedef struct{
+    int unit;
+    int style;
     shape_t *graphics;
     shape_t *pins;
 }unit_type_t;
@@ -106,7 +103,18 @@ typedef struct{
 typedef struct{
     char *name;
     unit_type_t *units;
+    bool has_common_units;
 }symbol_type_t;
+
+typedef struct{
+    size_t lib_index;
+    int unit;
+    int style;
+    point_t  position;
+    int rotation;
+    unit_type_t *cached_common_unit;
+    unit_type_t *cached_unit;
+}symbol_t;
 
 typedef struct{
     float *pins; 
@@ -119,7 +127,7 @@ typedef struct{
     char *path;
     
     symbol_type_t *symbol_library;
-    component_t *components;
+    symbol_t *symbols;
 
     shape_t *wires;
     shape_t *junctions;

@@ -6,10 +6,12 @@
 #include<math.h>
 
 #include<SDL3/SDL.h>
+#include <wchar.h>
 
 #include"../data.h"
 #include"../list.h"
 #include"../../cglm/cglm.h"
+#include "cglm/mat4.h"
 
 
 
@@ -168,13 +170,13 @@ void render_update_resolution(int x, int y){
 }
 
 
-void render_draw_shape(shape_t command, point_t offset){   
+void render_draw_shape(shape_t command, point_t offset, float rotation){   
 
     int shader_id;
     point_t quad_origin, quad_size;
 
     float t = (double)SDL_GetTicks()/1000.0f;
-    float rotation = 0;
+    float quad_rotation = 0;
     float margin = command.stroke.line_width; 
 
     vec4 color_vec;
@@ -216,8 +218,7 @@ void render_draw_shape(shape_t command, point_t offset){
             float dist = hypot(xrel, yrel);
 
             quad_size = (point_t){0, dist};
-
-            rotation = atan2(xrel, yrel);
+            quad_rotation = atan2(xrel, yrel);
 
             shader_id = line_shader;
             break;
@@ -229,13 +230,21 @@ void render_draw_shape(shape_t command, point_t offset){
     }
 
     mat4 transform;
-    glm_translate_make(transform, (vec3){quad_origin.x - margin/2.0f, quad_origin.y - margin/2.0f, 0});
+    glm_mat4_identity(transform);
+
+
     glm_translate(transform, (vec3){offset.x, offset.y, 0});
-    
-    glm_translate(transform, (vec3){(margin)/2.0f,  ( margin)/2.0f, 0});
     glm_rotate(transform, rotation, (vec3){0, 0, -1.0});
+
+    glm_translate(transform, (vec3){quad_origin.x - margin/2.0f, quad_origin.y - margin/2.0f, 0}); 
+  
+
+
+    glm_translate(transform, (vec3){(margin)/2.0f,  ( margin)/2.0f, 0});
+    glm_rotate(transform, quad_rotation, (vec3){0, 0, -1.0});
     glm_translate(transform, (vec3){-(margin)/2.0f, -(margin)/2.0f, 0});
 
+    
     glm_scale(transform, (vec3){quad_size.x + margin, quad_size.y + margin, 1.0});
     
 
@@ -308,23 +317,66 @@ void render_draw(){
     // render_draw_shape(test3);
 }
 
+void render_draw_symbol(symbol_type_t *library, symbol_t *symbol){
+    symbol_type_t type = library[symbol->lib_index]; 
+    
+    if(symbol->cached_unit == NULL || (type.has_common_units && symbol->cached_common_unit == NULL )){
+        for(int i = 0; i < list_size(type.units); i++){
+            unit_type_t *unit = &type.units[i];
+            
+            if(unit->unit == 0){
+                symbol->cached_common_unit = unit;
+                continue;
+            }
+            if(unit->unit == symbol->unit){
+                if(symbol->style == 0){
+                    symbol->cached_common_unit = unit;
+                    break;
+                }else if(unit->style == symbol->style){ 
+                    symbol->cached_unit = unit;
+                    break;
+                }
+            }
+        }
+    }
+
+    if(type.has_common_units && symbol->cached_common_unit != NULL){ 
+
+        for(int i = 0; i < list_size(symbol->cached_common_unit->graphics); i++){
+            render_draw_shape(symbol->cached_common_unit->graphics[i], symbol->position, glm_rad(symbol->rotation));
+        }
+
+    }
+
+    if(symbol->cached_unit != NULL){
+        for(int i = 0; i < list_size(symbol->cached_unit->graphics); i++){
+            render_draw_shape(symbol->cached_unit->graphics[i], symbol->position, glm_rad(symbol->rotation));
+        }
+    }
+
+}
 
 void render_draw_circuit(circuit_t *circuit){
 
     for(int i = 0; i < list_size(circuit->wires); i++){
-        render_draw_shape(circuit->wires[i], (point_t){0, 0});
+        render_draw_shape(circuit->wires[i], (point_t){0, 0}, 0);
     }
     for(int i = 0; i < list_size(circuit->junctions); i++){
-        render_draw_shape(circuit->junctions[i], (point_t){0, 0});
+        render_draw_shape(circuit->junctions[i], (point_t){0, 0}, 0);
     }
 
-    for(int i = 0; i < list_size(circuit->symbol_library); i++){
-        for(int j = 0; j < list_size(circuit->symbol_library[i].units); j++){
-            for(int k = 0; k < list_size(circuit->symbol_library[i].units[j].graphics); k++){
-                render_draw_shape(circuit->symbol_library[i].units[j].graphics[k], (point_t){20.0f * i});
-            }
-        }
+    // for(int i = 0; i < list_size(circuit->symbol_library); i++){
+    //     for(int j = 0; j < list_size(circuit->symbol_library[i].units); j++){
+    //         for(int k = 0; k < list_size(circuit->symbol_library[i].units[j].graphics); k++){
+    //             render_draw_shape(circuit->symbol_library[i].units[j].graphics[k], (point_t){10.0f * i}, 0);
+    //         }
+    //     }
+    // }
+
+    for(int i = 0; i < list_size(circuit->symbols); i++){
+        render_draw_symbol(circuit->symbol_library, &circuit->symbols[i]);
     }
+    
 
 }
 

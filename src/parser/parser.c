@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <wchar.h>
 #include "../list.h"
 #include "src/data.h"
 
@@ -264,7 +265,7 @@ circuit_t parse_schematic(char *path){
     circuit = (circuit_t){
         .path = str_dup(path),
         .symbol_library = list_init(symbol_type_t),
-        .components = list_init(component_t),
+        .symbols = list_init(symbol_t),
         .wires = list_init(shape_t),
         .junctions = list_init(shape_t),
     };
@@ -336,9 +337,26 @@ circuit_t parse_schematic(char *path){
         if(strcmp(val.identifier, "symbol") == 0){
             // debug_print_parse_value_recursive(val);
             
-            char *lib_id = val.children[0].children[0].string;
-            SDL_Log("adding instance of %s", lib_id);
+            symbol_t symbol = (symbol_t){0, 0, 0, 0};
             
+            char *lib_id = val.children[0].children[0].string;
+
+            for(int i = 0; i < list_size(circuit.symbol_library); i++){ 
+                if(strcmp(circuit.symbol_library[i].name, lib_id) == 0){
+                    symbol.lib_index = i;
+                    break;
+                }
+            }
+
+            
+            symbol.position = parse_position(val.children[1]);
+            symbol.rotation = (int)val.children[1].children[2].number;
+            symbol.unit = (int)val.children[2].children[0].number;
+            symbol.style = (int)val.children[3].children[0].number;
+            
+            SDL_Log("adding instance of %s (index %zu, unit %i, style %i)", lib_id, symbol.lib_index, symbol.unit, symbol.style);
+            
+            list_push(circuit.symbols, symbol);
             continue;
         }
 
@@ -374,8 +392,6 @@ void add_symbol_type_to_library(parse_value_t parse_value, circuit_t *circuit){
                 
                 if(strcmp(val.identifier, "symbol"))
                     continue;
-                
-
 
                 add_unit_to_symbol_type(val, &new_symbol);
 
@@ -397,14 +413,22 @@ void add_unit_to_symbol_type(parse_value_t parse_value, symbol_type_t *type){
     SDL_Log("\t\tadding %zu shapes to %s", list_size(parse_value.children), parse_value.children[0].string);
 
     unit_type_t unit = {
+        .unit = unit_number,
+        .style = style_number,
         .graphics = list_init(shape_t)
     }; 
+
 
     for(int i = 1; i < list_size(parse_value.children); i++){
         add_shape_to_list(parse_value.children[i], &unit.graphics);
     }
 
+    if(unit_number == 0 || style_number == 0){
+        type->has_common_units = true;
+    }
+    
     list_push(type->units, unit);
+
 }
 
 

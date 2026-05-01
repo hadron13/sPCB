@@ -95,7 +95,7 @@ int main(){
 
 
     bool running = true;
-    bool show_demo_window = true;
+    bool show_demo_window = false;
 
     bool mouse_left_pressed = false, mouse_right_pressed = false, mouse_middle_pressed = false;
 
