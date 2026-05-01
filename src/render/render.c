@@ -1,4 +1,5 @@
 #include "src/render/render.h"
+#include <SDL3/SDL_timer.h>
 #include<glad/gl.h>
 #include<stdint.h>
 #include<stdlib.h>
@@ -328,26 +329,35 @@ void render_draw_symbol(symbol_type_t *library, symbol_t *symbol){
             
             if(unit->unit == 0){
                 symbol->cached_common_unit = unit;
+                // SDL_Log("common: %i_%i", unit->unit, unit->style);
                 continue;
             }
             if(unit->unit == symbol->unit){
                 if(unit->style == 0){
                     symbol->cached_common_unit = unit;
+                    // SDL_Log("common(style): %i_%i", unit->unit, unit->style);
                     continue;
                 }else if(unit->style == symbol->style){ 
                     symbol->cached_unit = unit;
-                    break;
+                    // SDL_Log("proper: %i_%i", unit->unit, unit->style);
+                    continue;
                 }
             }
-        }
+        }   
+        // SDL_Log("%zu", SDL_GetPerformanceCounter());
     }
 
-    if(type.has_common_units && symbol->cached_common_unit != NULL){ 
 
+    // for(int u = 0; u < list_size(type.units); u++){
+    //     for(int i = 0; i < list_size(type.units[u].graphics); i++){
+    //         render_draw_shape(type.units[u].graphics[i], symbol->position, glm_rad(symbol->rotation));
+    //     }
+    // } 
+    //
+    if(type.has_common_units && symbol->cached_common_unit != NULL){ 
         for(int i = 0; i < list_size(symbol->cached_common_unit->graphics); i++){
             render_draw_shape(symbol->cached_common_unit->graphics[i], symbol->position, glm_rad(symbol->rotation));
         }
-
     }
 
     if(symbol->cached_unit != NULL){
@@ -359,6 +369,10 @@ void render_draw_symbol(symbol_type_t *library, symbol_t *symbol){
 }
 
 void render_draw_circuit(circuit_t *circuit){
+
+    if(circuit == NULL)
+        return;
+
 
     for(int i = 0; i < list_size(circuit->wires); i++){
         render_draw_shape(circuit->wires[i], (point_t){0, 0}, 0);

@@ -18,6 +18,7 @@
 #include"parser/parser.h"
 
 SDL_Window * window;
+circuit_t  current_circuit;
 
 void gui();
 
@@ -88,7 +89,8 @@ int main(){
 
     // circuit_t circuit = parse_schematic("D:\\sPCB\\led\\led.kicad_sch");
     //circuit_t circuit = parse_schematic("D:\\sPCB\\test3.kicad_sch");
-    circuit_t circuit = parse_schematic("/home/pico/development/spcb/led/led.kicad_sch");
+    current_circuit = parse_schematic("/home/pico/development/M6502/clock_gen.kicad_sch");
+    // circuit_t circuit = parse_schematic("/home/pico/development/spcb/led/led.kicad_sch");
 
     simulation_init();
     render_init();
@@ -152,7 +154,7 @@ int main(){
         }
 
 
-        // gui();
+        gui();
        
 
 
@@ -164,7 +166,6 @@ int main(){
         igGetWindowPos(&window_pos);
         ImVec2 pos = {window_pos.x + 50.0f, window_pos.y + 50.0f};
 
-        // ImDrawList_AddText_Vec2(fg, pos, col, "Caganero bicicleteiro", NULL);
         ImDrawList_AddText_FontPtr(fg, igGetDefaultFont(), 50, pos, col, "Test! \ueda1", NULL, 0, NULL);
 
 
@@ -181,7 +182,7 @@ int main(){
 
         {
             igRender();
-            render_draw_circuit(&circuit);
+            render_draw_circuit(&current_circuit);
         }
 
 

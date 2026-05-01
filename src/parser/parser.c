@@ -1,5 +1,6 @@
 #include"parser.h"
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_log.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -336,23 +337,48 @@ circuit_t parse_schematic(char *path){
         }
         if(strcmp(val.identifier, "symbol") == 0){
             // debug_print_parse_value_recursive(val);
+           
+            //STOP OMITTING TOKENS PLEASE
             
-            symbol_t symbol = (symbol_t){0, 0, 0, 0};
-            
-            char *lib_id = val.children[0].children[0].string;
+            symbol_t symbol = (symbol_t){
+                .unit = 1,
+                .style = 1
+            };
+            char *lib_id;
 
-            for(int i = 0; i < list_size(circuit.symbol_library); i++){ 
-                if(strcmp(circuit.symbol_library[i].name, lib_id) == 0){
-                    symbol.lib_index = i;
-                    break;
+            for(int i = 0; i < list_size(val.children); i++){
+                parse_value_t sym_val = val.children[i];
+                
+                if(strcmp(sym_val.identifier, "lib_id") == 0){ 
+                    lib_id = sym_val.children[0].string;
+
+                    for(int i = 0; i < list_size(circuit.symbol_library); i++){ 
+                        if(strcmp(circuit.symbol_library[i].name, lib_id) == 0){
+                            symbol.lib_index = i;
+                            break;
+                        }
+                    }
+
+                    continue;
+                }
+                if(strcmp(sym_val.identifier, "at") == 0){ 
+                    symbol.position = parse_position(sym_val);
+                    symbol.rotation = (int)sym_val.children[2].number;
+                    continue;
+                }
+                if(strcmp(sym_val.identifier, "unit") == 0){ 
+                    symbol.unit = (int)sym_val.children[0].number;
+                    continue;
+                }
+                if(strcmp(sym_val.identifier, "body_style") == 0){ 
+                    symbol.style = (int)sym_val.children[0].number;
+                    continue;
                 }
             }
+            
+
 
             
-            symbol.position = parse_position(val.children[1]);
-            symbol.rotation = (int)val.children[1].children[2].number;
-            symbol.unit = (int)val.children[2].children[0].number;
-            symbol.style = (int)val.children[3].children[0].number;
             
             SDL_Log("adding instance of %s (index %zu, unit %i, style %i)", lib_id, symbol.lib_index, symbol.unit, symbol.style);
             
@@ -404,11 +430,22 @@ void add_symbol_type_to_library(parse_value_t parse_value, circuit_t *circuit){
 }
 
 void add_unit_to_symbol_type(parse_value_t parse_value, symbol_type_t *type){
-    SDL_Log("\tadding unit|style %s", parse_value.children[0].string);
+    char * unit_name = parse_value.children[0].string;
+    SDL_Log("\tadding unit|style %s", unit_name);
   
     int unit_number, style_number;
+  
+    size_t unit_name_len = strlen(unit_name);
 
-    sscanf(strchr(parse_value.children[0].string, '_'), "_%i_%i", &unit_number, &style_number);
+    if(unit_name_len < 3){
+        SDL_Log("What the");
+        return;
+    }
+    char *first_underline = unit_name + unit_name_len - 3;
+
+    for(; first_underline >= unit_name && *first_underline != '_'; first_underline--);
+
+    sscanf(first_underline, "_%i_%i", &unit_number, &style_number);
     
     SDL_Log("\t\tadding %zu shapes to %s", list_size(parse_value.children), parse_value.children[0].string);
 
