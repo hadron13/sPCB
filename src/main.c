@@ -89,7 +89,7 @@ int main(){
 
     // circuit_t circuit = parse_schematic("D:\\sPCB\\led\\led.kicad_sch");
     //circuit_t circuit = parse_schematic("D:\\sPCB\\test3.kicad_sch");
-    current_circuit = parse_schematic("/home/pico/development/M6502/clock_gen.kicad_sch");
+    // current_circuit = parse_schematic("/home/pico/development/M6502/clock_gen.kicad_sch");
     // circuit_t circuit = parse_schematic("/home/pico/development/spcb/led/led.kicad_sch");
 
     simulation_init();

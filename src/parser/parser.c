@@ -6,7 +6,41 @@
 #include <ctype.h>
 #include <wchar.h>
 #include "../list.h"
+#include "cglm/vec2.h"
+#include "cglm/vec3.h"
 #include "src/data.h"
+#include <math.h>
+
+
+point_t point_sub(point_t a, point_t b){
+    return (point_t){a.x - b.x, a.y - b.y};
+}
+
+point_t find_arc_center(point_t start, point_t mid, point_t end) {
+    point_t center;
+    float d1 = glm_vec2_dot(&start.x, &start.x);
+    float d2 = glm_vec2_dot(&mid.x, &mid.x);
+    float d3 = glm_vec2_dot(&end.x, &end.x);
+
+    float D = 2.0f * (start.x * (mid.y - end.y) + 
+                      mid.x * (end.y - start.y) + 
+                      end.x * (start.y - mid.y));
+
+    if (fabsf(D) < 1e-6f) {
+        return (point_t){0, 0}; 
+    }
+
+    center.x = (d1 * (mid.y - end.y) + 
+                 d2 * (end.y - start.y) + 
+                 d3 * (start.y - mid.y)) / D;
+
+    center.y = (d1 * (end.x - mid.x) + 
+                 d2 * (start.x - end.x) + 
+                 d3 * (mid.x - start.x)) / D;
+    return center;
+}
+    
+
 
 typedef enum{
     VALUE_NUMBER, VALUE_BOOLEAN, VALUE_STRING, VALUE_GROUP
@@ -527,6 +561,34 @@ void add_shape_to_list(parse_value_t parse_value, shape_t **list){
             list_push(*list, line);
         }
 
+    }else if(strcmp(parse_value.identifier, "arc") == 0){
+        
+
+        point_t start  = flip_y(parse_position(parse_value.children[0]));
+        point_t middle = flip_y(parse_position(parse_value.children[1]));
+        point_t end    = flip_y(parse_position(parse_value.children[2]));
+
+        point_t center = find_arc_center(start, middle, end);
+        float radius = glm_vec2_distance(&center.x, &middle.x);
+
+        point_t start_centered = point_sub(start, center);
+        point_t end_centered = point_sub(end, center);
+
+        shape_t arc = {
+            .type = DRAW_ARC,
+            .stroke = {
+                .color = 0x00FF00FF,
+                .line_width = 0.25f 
+            },
+            .data.arc = {
+                .center = center, 
+                .radius = radius,
+                .start_angle = atan2(start_centered.y, start_centered.x),
+                .end_angle = atan2(end_centered.y, end_centered.x)
+            }
+        };
+
+        list_push(*list, arc);
     }else if(strcmp(parse_value.identifier, "pin") == 0){
 
         SDL_assert(parse_value.type == VALUE_GROUP && parse_value.children[2].type == VALUE_GROUP);

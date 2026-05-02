@@ -40,7 +40,7 @@ typedef struct{
 }point_t;
 
 typedef enum{
-    DRAW_ARC, DRAW_CIRCLE, DRAW_POLYGON, DRAW_BEZIER, DRAW_LINE, DRAW_RECTANGLE, DRAW_TEXT, DRAW_PIN
+    DRAW_ARC, DRAW_CIRCLE, DRAW_BEZIER, DRAW_LINE, DRAW_RECTANGLE, DRAW_TEXT, DRAW_PIN
 }shape_type_t;
 
 typedef enum{
@@ -59,7 +59,8 @@ typedef struct{
     }stroke;
     union{
         struct{
-            point_t start, mid, end;    
+            point_t center;
+            float radius, start_angle, end_angle;
         }arc;
         struct{
             point_t center;
@@ -74,7 +75,7 @@ typedef struct{
         struct{
             uint32_t n_points;
             point_t *points;
-        }polygon, bezier;
+        } bezier;
         struct{
             pin_style_t style;
             point_t start, end;

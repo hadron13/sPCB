@@ -72,6 +72,8 @@ int shader_compile(const char *vertex_path, const char *fragment_path){
     // cleanup
     glDeleteShader(vertex);
     glDeleteShader(fragment);
+    
+    SDL_Log("compiled shader program [%s | %s]", vertex_path, fragment_path);
 
     return program;
 }
@@ -92,6 +94,7 @@ static unsigned int shader;
 static GLuint rect_shader;
 static GLuint circle_shader;
 static GLuint line_shader;
+static GLuint arc_shader;
 
 static int zoom;
 static point_t offset;
@@ -144,6 +147,7 @@ void render_init(){
     rect_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/rect.frag.glsl");
     circle_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/circle.frag.glsl");
     line_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/line.frag.glsl");
+    arc_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/arc.frag.glsl");
 }
 
 void update_projection(){
@@ -174,8 +178,7 @@ void render_update_resolution(int x, int y){
 void render_draw_shape(shape_t command, point_t offset, float rotation){   
 
     int shader_id;
-    point_t quad_origin, quad_size;
-
+    point_t quad_origin, quad_size, extra_data;
     float t = (double)SDL_GetTicks()/1000.0f;
     float quad_rotation = 0;
     float margin = command.stroke.line_width; 
@@ -224,6 +227,15 @@ void render_draw_shape(shape_t command, point_t offset, float rotation){
             shader_id = line_shader;
             break;
         case DRAW_ARC:
+            quad_origin = command.data.arc.center;
+            quad_origin.x -= command.data.arc.radius;
+            quad_origin.y -= command.data.arc.radius;
+            
+            float arc_diam = command.data.circle.radius * 2.0f;
+            quad_size = (point_t){arc_diam, arc_diam};
+            
+            extra_data = (point_t){command.data.arc.start_angle, command.data.arc.end_angle};
+            shader_id = arc_shader;
 
             break;  
         default:
@@ -238,13 +250,10 @@ void render_draw_shape(shape_t command, point_t offset, float rotation){
     glm_rotate(transform, rotation, (vec3){0, 0, -1.0});
 
     glm_translate(transform, (vec3){quad_origin.x - margin/2.0f, quad_origin.y - margin/2.0f, 0}); 
-  
-
 
     glm_translate(transform, (vec3){(margin)/2.0f,  ( margin)/2.0f, 0});
     glm_rotate(transform, quad_rotation, (vec3){0, 0, -1.0});
     glm_translate(transform, (vec3){-(margin)/2.0f, -(margin)/2.0f, 0});
-
     
     glm_scale(transform, (vec3){quad_size.x + margin, quad_size.y + margin, 1.0});
     
@@ -256,6 +265,7 @@ void render_draw_shape(shape_t command, point_t offset, float rotation){
     int origin_loc = glGetUniformLocation(shader_id, "quad_origin");
     int size_loc   = glGetUniformLocation(shader_id, "quad_size");
     int thickness_loc = glGetUniformLocation(shader_id, "thickness");
+    int extra_loc = glGetUniformLocation(shader_id, "extra");
 
     glUniformMatrix4fv(ploc, 1, false, (float*)projection);
     glUniformMatrix4fv(tloc, 1, false, (float*)transform);
@@ -263,6 +273,9 @@ void render_draw_shape(shape_t command, point_t offset, float rotation){
     glUniform2fv(origin_loc, 1, &quad_origin.x);
     glUniform2fv(size_loc, 1, &quad_size.x);
     glUniform1f(thickness_loc, command.stroke.line_width);
+    if(extra_loc != -1){
+        glUniform2fv(extra_loc, 1, &extra_data.x);
+    }
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
