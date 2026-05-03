@@ -417,33 +417,45 @@ circuit_t parse_schematic(char *path){
                         continue;
                     
                     bool hide = false;
-                    point_t position;
+ 
+                    shape_t text_shape = {
+                        .type = DRAW_TEXT,
+                        .data.text = {
+                            .justify = JUSTIFY_CENTER,
+                        }
+                    };
 
                     for(int i = 0; i < list_size(sym_val.children); i++){
                         parse_value_t prop_value = sym_val.children[i];
                         if(strcmp(prop_value.identifier, "hide") == 0){
-                            hide = sym_val.children[5].children[0].boolean;
+                            hide = prop_value.children[0].boolean;
                             break;
                         }
                         if(strcmp(prop_value.identifier, "at") == 0){
-                            position = parse_position(sym_val.children[2]);
+                            text_shape.data.text.position = parse_position(sym_val.children[2]);
+                        }
+                        if(strcmp(prop_value.identifier, "effects") == 0){
+                            for(int j = 0; j < list_size(prop_value.children); j++){
+                                parse_value_t effect_value = prop_value.children[j];
+
+                                if(strcmp(effect_value.identifier, "justify") == 0){
+                                    char *justify_mode = effect_value.children[0].string;
+
+                                    if(strcmp(justify_mode, "left") == 0){
+                                        text_shape.data.text.justify = JUSTIFY_LEFT;
+                                    }else if(strcmp(justify_mode, "right")){
+                                        text_shape.data.text.justify = JUSTIFY_RIGHT;
+                                    }
+                                }   
+                            }
                         }
                     }
-                    SDL_Log("adding property %s", sym_val.children[1].string);
-                    
+
                     if(hide)
                         continue;
                     
-                    char *text = str_dup(sym_val.children[1].string);
-    
-                    shape_t text_shape = {
-                        .type = DRAW_TEXT,
-                        .data.text = {
-                            .string = text,
-                            .position = position
-                        }
-                    };
-
+                    text_shape.data.text.string = str_dup(sym_val.children[1].string);
+   
                     list_push(symbol.properties, text_shape);
                     continue;
                 }

@@ -1,5 +1,6 @@
 #include "src/render/render.h"
 #include <SDL3/SDL_timer.h>
+#include <SDL3/SDL_video.h>
 #include<glad/gl.h>
 #include<stdint.h>
 #include<stdlib.h>
@@ -101,6 +102,7 @@ static GLuint arc_shader;
 
 static int zoom;
 static point_t offset;
+static point_t window_pos;
 static point_t window_size;
 static mat4 projection;
 
@@ -178,7 +180,12 @@ void render_update_resolution(int x, int y){
     window_size = (point_t){x, y};
     update_projection();
 }
+void render_update_position(int x, int y){
+    window_pos = (point_t){x, y};
+}
 
+
+ImDrawList *imgui_drawlist;
 
 void render_draw_shape(shape_t command, point_t offset, float rotation){   
 
@@ -192,6 +199,30 @@ void render_draw_shape(shape_t command, point_t offset, float rotation){
     color_to_vec4(command.stroke.color, color_vec);
 
     switch(command.type){
+
+        case DRAW_TEXT:
+            if(imgui_drawlist == NULL)
+                return;
+
+            float current_font_size = igGetFontSize();
+            ImVec2 text_size;
+            igCalcTextSize(&text_size, command.data.text.string, NULL, false, 0);
+
+
+            vec4 ndc;
+            glm_mat4_mulv(projection, (vec4){command.data.text.position.x, command.data.text.position.y, -1.0, 1.0}, ndc);
+
+            ImVec2 pos = {window_pos.x + ((ndc[0] + 1.0) / 2.0) * window_size.x, window_pos.y + ((-ndc[1] + 1.0) / 2.0) * window_size.y};
+
+            pos.y -= ((text_size.y/2.0f)/current_font_size)*zoom;
+            if(command.data.text.justify == JUSTIFY_CENTER){
+                pos.x -= ((text_size.x/2.0f)/current_font_size)*zoom;
+            }
+             
+            ImDrawList_AddText_FontPtr(imgui_drawlist, igGetDefaultFont(), zoom, pos, 0xFFFFFFFF, command.data.text.string, NULL, 0, NULL);
+
+            return;
+
         case DRAW_RECTANGLE:
             if(command.data.rect.end.x < command.data.rect.start.x){
                 float temp = command.data.rect.start.x;
@@ -294,51 +325,10 @@ void render_draw(){
 
     float t = (double)SDL_GetTicks()/5000.0f;
 
-    shape_t test = {
-        .type = DRAW_RECTANGLE,
-        .stroke = {
-            .color = 0xFF0000FF,
-            .line_width = 30.0f 
-        },
-        .data.rect = {
-            .start = {-100, -100},
-            .end = {100, 100}
-        }
-    };
-    shape_t test2 = {
-        .type = DRAW_CIRCLE,
-        .stroke = {
-            .color = 0xFF0000FF,
-            .line_width = 40.0f 
-        },
-        .data.circle = {
-            .center = {500, 500},
-            .radius = 200
-        }
-    };
-    shape_t test3 = {
-        .type = DRAW_LINE,
-        .stroke = {
-            .color = 0x00FF00FF,
-            .line_width = 5.0f 
-        },
-        .data.line = {
-            .start = {300, 300},
-            .end = {600, 300}
-        }
-    };
-    // if(rand()%5== 1){
-    //     SDL_Log("x %f y %f", sin(t), cos(t));
-    // }
 
-    // for(int i = 0; i < list_size(commands); i++){
-    //     render_draw_shape(commands[i]);
-    // }
-    //render_draw_shape(test2);
-    // render_draw_shape(test3);
 }
 
-ImDrawList *imgui_drawlist;
+
 
 void render_draw_symbol(symbol_type_t *library, symbol_t *symbol){
     symbol_type_t type = library[symbol->lib_index]; 
@@ -392,11 +382,7 @@ void render_draw_symbol(symbol_type_t *library, symbol_t *symbol){
         return;
 
     for(int i = 0; i < list_size(symbol->properties); i++){ 
-        ImVec2 window_pos;
-        igGetWindowPos(&window_pos);
-        ImVec2 pos = {window_pos.x + 50.0f, window_pos.y + 50.0f};
-        
-        ImDrawList_AddText_FontPtr(imgui_drawlist, igGetDefaultFont(), 50, pos, 0xFFFFFFFF, "Brocolau", NULL, 0, NULL);
+        render_draw_shape(symbol->properties[i], (point_t){0, 0}, 0);
     }
 
 }
@@ -422,7 +408,7 @@ void render_draw_circuit(circuit_t *circuit){
     //     }
     // }
 
-    imgui_drawlist = igGetForegroundDrawList_ViewportPtr(NULL);
+    imgui_drawlist = igGetBackgroundDrawList(NULL);
 
     for(int i = 0; i < list_size(circuit->symbols); i++){
         render_draw_symbol(circuit->symbol_library, &circuit->symbols[i]);

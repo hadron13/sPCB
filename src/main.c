@@ -3,6 +3,7 @@
 #include<SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_oldnames.h>
+#include <SDL3/SDL_video.h>
 #include<glad/gl.h>
 #include <wchar.h>
 
@@ -135,7 +136,14 @@ int main(){
                         render_mouse_drag(event.motion.xrel, event.motion.yrel);
                     break;
                 case SDL_EVENT_WINDOW_RESIZED:
-                    render_update_resolution(event.window.data1, event.window.data2);
+                    if(event.window.windowID == SDL_GetWindowID(window)){
+                        render_update_resolution(event.window.data1, event.window.data2);
+                    }
+                    break;
+                case SDL_EVENT_WINDOW_MOVED:
+                    if(event.window.windowID == SDL_GetWindowID(window)){
+                        render_update_position(event.window.data1, event.window.data2);
+                    }
                     break;
 
             }
@@ -163,11 +171,13 @@ int main(){
 
 
         ImVec2 window_pos, window_size;
-        igGetWindowPos(&window_pos);
-        ImVec2 pos = {window_pos.x + 50.0f, window_pos.y + 50.0f};
+        int x, y;
+        SDL_GetWindowPosition(window, &x, &y);
+        // igGetWindowPos(&window_pos);
+        // SDL_Log("%i %i", x, y);
+        ImVec2 pos = {x + 0.0f, y + 0.0f};
 
-        ImDrawList_AddText_FontPtr(fg, igGetDefaultFont(), 50, pos, col, "Test! \ueda1", NULL, 0, NULL);
-
+        ImDrawList_AddText_FontPtr(fg, igGetDefaultFont(), 14, pos, col, "Test! \ueda1", NULL, 0, NULL);
 
 
 
@@ -181,8 +191,8 @@ int main(){
 
 
         {
-            igRender();
             render_draw_circuit(&current_circuit);
+            igRender();
         }
 
 

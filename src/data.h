@@ -39,6 +39,10 @@ typedef struct{
     float x, y;
 }point_t;
 
+typedef struct{
+    int32_t x, y;
+}ipoint_t;
+
 typedef enum{
     DRAW_ARC, DRAW_CIRCLE, DRAW_BEZIER, DRAW_LINE, DRAW_RECTANGLE, DRAW_TEXT, DRAW_PIN
 }shape_type_t;
@@ -46,6 +50,10 @@ typedef enum{
 typedef enum{
     STYLE_SOLID, STYLE_DASHED, STYLE_DOTTED 
 }line_style_t;
+
+typedef enum{
+    JUSTIFY_LEFT, JUSTIFY_RIGHT, JUSTIFY_CENTER, 
+}justify_t;
 
 //generic graphical component
 typedef struct{
@@ -56,7 +64,6 @@ typedef struct{
         float line_width;
         line_style_t line_style;
         bool fill;
-        float font_size;
     }stroke;
     union{
         struct{
@@ -85,6 +92,8 @@ typedef struct{
         struct{
             char *string;
             point_t position;
+            float font_size;
+            justify_t justify;
         }text;
     }data;
 }shape_t;
