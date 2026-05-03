@@ -191,6 +191,7 @@ int main(){
 
 
         {
+            render_draw_background();
             render_draw_circuit(&current_circuit);
             igRender();
         }

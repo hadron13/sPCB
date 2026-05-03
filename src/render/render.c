@@ -99,6 +99,7 @@ static GLuint rect_shader;
 static GLuint circle_shader;
 static GLuint line_shader;
 static GLuint arc_shader;
+static GLuint background_shader;
 
 static int zoom;
 static point_t offset;
@@ -155,6 +156,7 @@ void render_init(){
     circle_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/circle.frag.glsl");
     line_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/line.frag.glsl");
     arc_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/arc.frag.glsl");
+    background_shader = shader_compile("data/shaders/background.vert.glsl", "data/shaders/background.frag.glsl");
 }
 
 void update_projection(){
@@ -184,6 +186,23 @@ void render_update_position(int x, int y){
     window_pos = (point_t){x, y};
 }
 
+void render_draw_background(){ 
+    glUseProgram(background_shader);
+
+    double scale = pow(1.1, (double)-zoom);
+
+    int size_loc = glGetUniformLocation(background_shader, "quad_size");
+    int origin_loc = glGetUniformLocation(background_shader, "quad_origin");
+    // int proj_loc = glGetUniformLocation(background_shader, "projection"); 
+    // glUniformMatrix4fv(proj_loc, 1, false, (float*)projection);
+    
+    glUniform2f(size_loc, window_size.x * scale, -window_size.y * scale);
+    glUniform2f(origin_loc, offset.x, offset.y);
+    
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    
+}
 
 ImDrawList *imgui_drawlist;
 
@@ -219,7 +238,7 @@ void render_draw_shape(shape_t command, point_t offset, float rotation){
                 pos.x -= ((text_size.x/2.0f)/current_font_size)*zoom;
             }
              
-            ImDrawList_AddText_FontPtr(imgui_drawlist, igGetDefaultFont(), zoom, pos, 0xFFFFFFFF, command.data.text.string, NULL, 0, NULL);
+            ImDrawList_AddText_FontPtr(imgui_drawlist, igGetDefaultFont(), glm_max(zoom, 0.5f), pos, 0xFFFFFFFF, command.data.text.string, NULL, 0, NULL);
 
             return;
 
@@ -301,16 +320,16 @@ void render_draw_shape(shape_t command, point_t offset, float rotation){
     
 
     glUseProgram(shader_id);
-    int tloc = glGetUniformLocation(shader_id, "transform");
-    int ploc = glGetUniformLocation(shader_id, "projection");
-    int cloc = glGetUniformLocation(shader_id, "color");
+    int transform_loc = glGetUniformLocation(shader_id, "transform");
+    int proj_loc = glGetUniformLocation(shader_id, "projection");
+    int color_loc = glGetUniformLocation(shader_id, "color");
     int origin_loc = glGetUniformLocation(shader_id, "quad_origin");
     int size_loc   = glGetUniformLocation(shader_id, "quad_size");
     int thickness_loc = glGetUniformLocation(shader_id, "thickness");
 
-    glUniformMatrix4fv(ploc, 1, false, (float*)projection);
-    glUniformMatrix4fv(tloc, 1, false, (float*)transform);
-    glUniform4fv(cloc, 1, (float*)color_vec);
+    glUniformMatrix4fv(proj_loc, 1, false, (float*)projection);
+    glUniformMatrix4fv(transform_loc, 1, false, (float*)transform);
+    glUniform4fv(color_loc, 1, (float*)color_vec);
     glUniform2fv(origin_loc, 1, &quad_origin.x);
     glUniform2fv(size_loc, 1, &quad_size.x);
     glUniform1f(thickness_loc, command.stroke.line_width);
@@ -327,6 +346,7 @@ void render_draw(){
 
 
 }
+
 
 
 
