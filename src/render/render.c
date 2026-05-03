@@ -141,7 +141,9 @@ void render_init(){
     window_size = (point_t){1200, 800};
     glm_ortho(-600, 600, 400, -400, 0.1, 10.0f, projection);
     
-    zoom = 10.0;
+    zoom = 20.0;
+    offset.x -= 100;
+    offset.y -= 100;
     update_projection();
 
     rect_shader = shader_compile("data/shaders/standard.vert.glsl", "data/shaders/rect.frag.glsl");
@@ -178,7 +180,7 @@ void render_update_resolution(int x, int y){
 void render_draw_shape(shape_t command, point_t offset, float rotation){   
 
     int shader_id;
-    point_t quad_origin, quad_size, extra_data;
+    point_t quad_origin, quad_size;
     float t = (double)SDL_GetTicks()/1000.0f;
     float quad_rotation = 0;
     float margin = command.stroke.line_width; 
@@ -231,11 +233,17 @@ void render_draw_shape(shape_t command, point_t offset, float rotation){
             quad_origin.x -= command.data.arc.radius;
             quad_origin.y -= command.data.arc.radius;
             
-            float arc_diam = command.data.circle.radius * 2.0f;
+            float arc_diam = command.data.arc.radius * 2.0f;
             quad_size = (point_t){arc_diam, arc_diam};
             
-            extra_data = (point_t){command.data.arc.start_angle, command.data.arc.end_angle};
             shader_id = arc_shader;
+
+            glUseProgram(shader_id);
+            int start_loc = glGetUniformLocation(shader_id, "start");
+            int end_loc = glGetUniformLocation(shader_id, "end");
+
+            glUniform2fv(start_loc, 1, &command.data.arc.start.x);
+            glUniform2fv(end_loc, 1, &command.data.arc.end.x);
 
             break;  
         default:
@@ -265,7 +273,6 @@ void render_draw_shape(shape_t command, point_t offset, float rotation){
     int origin_loc = glGetUniformLocation(shader_id, "quad_origin");
     int size_loc   = glGetUniformLocation(shader_id, "quad_size");
     int thickness_loc = glGetUniformLocation(shader_id, "thickness");
-    int extra_loc = glGetUniformLocation(shader_id, "extra");
 
     glUniformMatrix4fv(ploc, 1, false, (float*)projection);
     glUniformMatrix4fv(tloc, 1, false, (float*)transform);
@@ -273,9 +280,6 @@ void render_draw_shape(shape_t command, point_t offset, float rotation){
     glUniform2fv(origin_loc, 1, &quad_origin.x);
     glUniform2fv(size_loc, 1, &quad_size.x);
     glUniform1f(thickness_loc, command.stroke.line_width);
-    if(extra_loc != -1){
-        glUniform2fv(extra_loc, 1, &extra_data.x);
-    }
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);

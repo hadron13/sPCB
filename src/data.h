@@ -60,7 +60,8 @@ typedef struct{
     union{
         struct{
             point_t center;
-            float radius, start_angle, end_angle;
+            point_t start, middle, end;
+            float radius, start_angle, end_angle, offset_angle, length;
         }arc;
         struct{
             point_t center;

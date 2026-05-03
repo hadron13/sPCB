@@ -568,8 +568,15 @@ void add_shape_to_list(parse_value_t parse_value, shape_t **list){
         point_t middle = flip_y(parse_position(parse_value.children[1]));
         point_t end    = flip_y(parse_position(parse_value.children[2]));
 
+
+        SDL_Log("start: %f %f", start.x, start.y);
+        SDL_Log("middle: %f %f", middle.x, middle.y);
+        SDL_Log("end: %f %f", end.x, end.y);
+
         point_t center = find_arc_center(start, middle, end);
         float radius = glm_vec2_distance(&center.x, &middle.x);
+
+        SDL_Log("center: %f %f", center.x, center.y);
 
         point_t start_centered = point_sub(start, center);
         point_t end_centered = point_sub(end, center);
@@ -583,8 +590,8 @@ void add_shape_to_list(parse_value_t parse_value, shape_t **list){
             .data.arc = {
                 .center = center, 
                 .radius = radius,
-                .start_angle = atan2(start_centered.y, start_centered.x),
-                .end_angle = atan2(end_centered.y, end_centered.x)
+                .start = start_centered,
+                .end = end_centered,
             }
         };
 
