@@ -56,6 +56,7 @@ typedef struct{
         float line_width;
         line_style_t line_style;
         bool fill;
+        float font_size;
     }stroke;
     union{
         struct{
@@ -81,7 +82,10 @@ typedef struct{
             pin_style_t style;
             point_t start, end;
         }pin;
-        char *text;
+        struct{
+            char *string;
+            point_t position;
+        }text;
     }data;
 }shape_t;
 
@@ -114,6 +118,7 @@ typedef struct{
     int style;
     point_t  position;
     int rotation;
+    shape_t *properties;
     unit_type_t *cached_common_unit;
     unit_type_t *cached_unit;
 }symbol_t;

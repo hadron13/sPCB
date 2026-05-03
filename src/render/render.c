@@ -14,6 +14,9 @@
 #include"../../cglm/cglm.h"
 #include "cglm/mat4.h"
 
+#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+#include "cimgui/cimgui.h"
+
 
 
 char *load_file(const char *path){
@@ -335,6 +338,8 @@ void render_draw(){
     // render_draw_shape(test3);
 }
 
+ImDrawList *imgui_drawlist;
+
 void render_draw_symbol(symbol_type_t *library, symbol_t *symbol){
     symbol_type_t type = library[symbol->lib_index]; 
     
@@ -383,6 +388,17 @@ void render_draw_symbol(symbol_type_t *library, symbol_t *symbol){
         }
     }
 
+    if(!imgui_drawlist)
+        return;
+
+    for(int i = 0; i < list_size(symbol->properties); i++){ 
+        ImVec2 window_pos;
+        igGetWindowPos(&window_pos);
+        ImVec2 pos = {window_pos.x + 50.0f, window_pos.y + 50.0f};
+        
+        ImDrawList_AddText_FontPtr(imgui_drawlist, igGetDefaultFont(), 50, pos, 0xFFFFFFFF, "Brocolau", NULL, 0, NULL);
+    }
+
 }
 
 void render_draw_circuit(circuit_t *circuit){
@@ -405,6 +421,8 @@ void render_draw_circuit(circuit_t *circuit){
     //         }
     //     }
     // }
+
+    imgui_drawlist = igGetForegroundDrawList_ViewportPtr(NULL);
 
     for(int i = 0; i < list_size(circuit->symbols); i++){
         render_draw_symbol(circuit->symbol_library, &circuit->symbols[i]);

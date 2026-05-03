@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 #include <wchar.h>
 #include "../list.h"
 #include "cglm/vec2.h"
@@ -376,7 +377,8 @@ circuit_t parse_schematic(char *path){
             
             symbol_t symbol = (symbol_t){
                 .unit = 1,
-                .style = 1
+                .style = 1,
+                .properties = list_init(shape_t),
             };
             char *lib_id;
 
@@ -408,11 +410,47 @@ circuit_t parse_schematic(char *path){
                     symbol.style = (int)sym_val.children[0].number;
                     continue;
                 }
+
+                if(strcmp(sym_val.identifier, "property") == 0){
+
+                    if(strlen(sym_val.children[1].string) == 0)
+                        continue;
+                    
+                    bool hide = false;
+                    point_t position;
+
+                    for(int i = 0; i < list_size(sym_val.children); i++){
+                        parse_value_t prop_value = sym_val.children[i];
+                        if(strcmp(prop_value.identifier, "hide") == 0){
+                            hide = sym_val.children[5].children[0].boolean;
+                            break;
+                        }
+                        if(strcmp(prop_value.identifier, "at") == 0){
+                            position = parse_position(sym_val.children[2]);
+                        }
+                    }
+                    SDL_Log("adding property %s", sym_val.children[1].string);
+                    
+                    if(hide)
+                        continue;
+                    
+                    char *text = str_dup(sym_val.children[1].string);
+    
+                    shape_t text_shape = {
+                        .type = DRAW_TEXT,
+                        .data.text = {
+                            .string = text,
+                            .position = position
+                        }
+                    };
+
+                    list_push(symbol.properties, text_shape);
+                    continue;
+                }
+
+
+
             }
-            
-
-
-            
             
             SDL_Log("adding instance of %s (index %zu, unit %i, style %i)", lib_id, symbol.lib_index, symbol.unit, symbol.style);
             
