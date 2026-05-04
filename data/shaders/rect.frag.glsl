@@ -21,6 +21,9 @@ void main(){
     
     float d = sdRoundedBox(uv - quad_size * 0.5, quad_size*0.5, vec4(thickness/4.0f)) ;
     d = abs(d) - thickness/2.0f;
+
+    vec4 smooth_color = color;
+    smooth_color.a = smoothstep(0.03, -0.03, d);
     
-    gl_FragColor = d < 0.0? color : vec4(0.0);
+    gl_FragColor = d < 0.0? smooth_color : vec4(0.0);
 }

@@ -23,7 +23,10 @@ void main(){
 
     float d = sdSegment(uv, vec2(0), quad_size);
     d -= thickness/2.0f;
+
+    vec4 smooth_color = color;
+    smooth_color.a = smoothstep(0.03, -0.03, d);
     
-    gl_FragColor = d < 0.0? color : vec4(0.0);
+    gl_FragColor = d < 0.0? smooth_color : vec4(0.0);
 }
 
