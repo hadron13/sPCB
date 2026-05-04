@@ -148,6 +148,8 @@ typedef struct{
 
     shape_t *wires;
     shape_t *junctions;
+    shape_t *busses;
+    shape_t *bus_entries;
 }circuit_t;
 
 

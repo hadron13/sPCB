@@ -306,6 +306,8 @@ circuit_t parse_schematic(char *path){
         .symbols = list_init(symbol_t),
         .wires = list_init(shape_t),
         .junctions = list_init(shape_t),
+        .busses = list_init(shape_t),
+        .bus_entries = list_init(shape_t),
     };
 
 
@@ -361,17 +363,56 @@ circuit_t parse_schematic(char *path){
                     .line_width = 0.4f 
                 },
                 .data.circle = {
-                    // (junction  (at       X/Y  ) )
-                    .center = {
-                        val.children[0].children[0].number,                     
-                        val.children[0].children[1].number,
-                    },
+                    .center = parse_position(val.children[0]),
                     .radius = 0.2f
                 }
             };
             list_push(circuit.junctions, junction_shape);
             continue;
         }
+
+        if(strcmp(val.identifier, "bus") == 0){
+            parse_value_t pts = val.children[0];
+
+            shape_t bus_shape = {
+                .type = DRAW_LINE,
+                .stroke = {
+                    .color = 0x990000FF,
+                    .line_width = 0.5f 
+                },
+                .data.line = {
+                    .start = parse_position(pts.children[0]),
+                    .end = parse_position(pts.children[1])
+                }
+            };
+            list_push(circuit.busses, bus_shape);
+            continue;
+        }
+
+        if(strcmp(val.identifier, "bus_entry") == 0){
+            point_t start = parse_position(val.children[0]);
+            point_t end = (point_t){
+                start.x + val.children[1].children[0].number,
+                start.y + val.children[1].children[1].number
+            };
+            
+            shape_t bus_shape = {
+                .type = DRAW_LINE,
+                .stroke = {
+                    .color = 0x660000FF,
+                    .line_width = 0.3f 
+                },
+                .data.line = {
+                    .start = start,
+                    .end = end
+                }
+            };
+            list_push(circuit.bus_entries, bus_shape);
+            continue;
+        }
+
+
+
         if(strcmp(val.identifier, "symbol") == 0){
             // debug_print_parse_value_recursive(val);
            
@@ -651,10 +692,11 @@ void add_shape_to_list(parse_value_t parse_value, shape_t **list){
     }else if(strcmp(parse_value.identifier, "pin") == 0){
 
         SDL_assert(parse_value.type == VALUE_GROUP && parse_value.children[2].type == VALUE_GROUP);
+
         point_t at = flip_y(parse_position(parse_value.children[2]));
         int rotation = (int)parse_value.children[2].children[2].number;
         float length = parse_value.children[3].children[0].number;
-       
+
         point_t end = at;
 
         switch(rotation){
@@ -672,6 +714,30 @@ void add_shape_to_list(parse_value_t parse_value, shape_t **list){
                 break;
         }
 
+
+        if(parse_value.children[1].type == VALUE_STRING && strcmp(parse_value.children[1].string, "inverted") == 0){
+            shape_t inverter_ball = {
+                .type = DRAW_CIRCLE,
+                .stroke = {
+                    .color = 0x00FF00FF,
+                    .line_width = 0.25f 
+                },
+                .data.circle = {
+                    .center = end,
+                    .radius = 0.5f, 
+                }
+            };
+            switch(rotation){
+                case 0:   inverter_ball.data.circle.center.x -= 0.5f; end.x -= 1.0f;break;
+                case 90:  inverter_ball.data.circle.center.y += 0.5f; end.y += 1.0f;break;
+                case 180: inverter_ball.data.circle.center.x += 0.5f; end.x += 1.0f;break;
+                case 270: inverter_ball.data.circle.center.y -= 0.5f; end.y -= 1.0f;break;
+            }
+
+
+            list_push(*list, inverter_ball);
+        }
+
         shape_t line = {
             .type = DRAW_LINE,
             .stroke = {
@@ -683,6 +749,9 @@ void add_shape_to_list(parse_value_t parse_value, shape_t **list){
                 .end = end,
             }
         };
+    
+
+
         list_push(*list, line);
 
     }

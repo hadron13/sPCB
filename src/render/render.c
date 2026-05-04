@@ -410,9 +410,21 @@ void render_draw_circuit(circuit_t *circuit){
     if(circuit == NULL)
         return;
 
+    imgui_drawlist = igGetBackgroundDrawList(NULL);
+
+    for(int i = 0; i < list_size(circuit->symbols); i++){
+        render_draw_symbol(circuit->symbol_library, &circuit->symbols[i]);
+    }
+
 
     for(int i = 0; i < list_size(circuit->wires); i++){
         render_draw_shape(circuit->wires[i], (point_t){0, 0}, 0);
+    }
+    for(int i = 0; i < list_size(circuit->bus_entries); i++){
+        render_draw_shape(circuit->bus_entries[i], (point_t){0, 0}, 0);
+    }
+    for(int i = 0; i < list_size(circuit->busses); i++){
+        render_draw_shape(circuit->busses[i], (point_t){0, 0}, 0);
     }
     for(int i = 0; i < list_size(circuit->junctions); i++){
         render_draw_shape(circuit->junctions[i], (point_t){0, 0}, 0);
@@ -426,11 +438,7 @@ void render_draw_circuit(circuit_t *circuit){
     //     }
     // }
 
-    imgui_drawlist = igGetBackgroundDrawList(NULL);
 
-    for(int i = 0; i < list_size(circuit->symbols); i++){
-        render_draw_symbol(circuit->symbol_library, &circuit->symbols[i]);
-    }
     
 
 }

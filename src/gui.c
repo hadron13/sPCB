@@ -39,6 +39,10 @@ extern circuit_t current_circuit;
 
 void open_file_callback(void* userdata, const char* const* filelist, int filter){
     SDL_Log("Importing file: '%s'", *filelist);
+    
+    if(filelist[0] == NULL)
+        return;
+
     current_circuit = parse_schematic((char*)filelist[0]);
 
     // while (*filelist) {
