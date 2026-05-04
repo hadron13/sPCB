@@ -4,6 +4,8 @@
 #include<string.h>
 #include"simulation.h"
 #include"parser/parser.h"
+#include"list.h"
+#include<math.h>
 
 bool centralized_button(const char *label, float width){
     ImGuiStyle* style = igGetStyle();
@@ -28,10 +30,11 @@ bool centralized_button(const char *label, float width){
 }
 
 bool show_style_editor = false;
-
 bool show_simulation_controls = true;
+bool show_demo_window = false;
 
-float speed = 1.0f;
+float speed = 3.0f;
+float step = 1.0f;
 
 extern SDL_Window* window;
 extern circuit_t current_circuit;
@@ -56,12 +59,18 @@ const SDL_DialogFileFilter filters[] = {
 };
 
 bool sim_running_placeholder = false;
+float timer = 0;
+
+float noise(void *dat, int i){
+    float t = i * 3.14159f * 0.05f + timer * 10.0f;
+    return sinf(t) + (sinf(3.0f * t )/3.0f) + (sinf(5.0f * t)/5.0f) + (sinf(7.0f * t)/7.0f);
+}
 
 void simulation_controls(){
     igBegin("Simulation Controls", &show_simulation_controls, ImGuiWindowFlags_None);
 
     igText("Simulation Speed");
-    igSliderFloat("##Sim_Speed", &speed, 0.1, 1000.0, "%f steps/s", ImGuiSliderFlags_Logarithmic);
+    igSliderFloat("##Sim_Speed", &speed, 0.1, 100.0, "%f steps/s", ImGuiSliderFlags_Logarithmic);
 
     igNewLine();
 
@@ -69,26 +78,49 @@ void simulation_controls(){
         igPushStyleColor_U32(ImGuiCol_Button,        0xFF00BB00);
         igPushStyleColor_U32(ImGuiCol_ButtonHovered, 0xFF00DD00);
         igPushStyleColor_U32(ImGuiCol_ButtonActive,  0xFF00AA00);
-        if(igButton("Start", (ImVec2){80.0, 30.0}))
+        if(igButton("Start", (ImVec2){80.0, 30.0})){
             sim_running_placeholder = true;
+
+            for(int i = 0; i < list_size(current_circuit.wires); i++){
+                current_circuit.wires[i].stroke.line_width = 0.4f;
+            }
+
+        }
         igPopStyleColor(3);
     }else{
+
         igPushStyleColor_U32(ImGuiCol_Button,        0xFF0000BB);
         igPushStyleColor_U32(ImGuiCol_ButtonHovered, 0xFF0000DD);
         igPushStyleColor_U32(ImGuiCol_ButtonActive,  0xFF0000AA);
-        if(igButton("Stop", (ImVec2){80.0, 30.0}))
+        if(igButton("Stop", (ImVec2){80.0, 30.0})){
             sim_running_placeholder = false; 
+            for(int i = 0; i < list_size(current_circuit.wires); i++){
+                current_circuit.wires[i].stroke.line_width = 0.25f;
+                current_circuit.wires[i].stroke.color = 0x440000FF;
+            }
+        }
         igPopStyleColor(3);
+
+        timer += 1.0f/165.0f * speed;
+
+        for(int i = 0; i < list_size(current_circuit.wires); i++){    
+            if(sin(timer * 3.14f + (i ^ 0x5457)) > 0.5f || cos(timer * -2.0f + (i ^ 0x7554)) > 0.5f){
+                current_circuit.wires[i].stroke.color = 0xFF0000FF;
+            }else{
+                current_circuit.wires[i].stroke.color = 0x440000FF;
+            }
+        }
+
+        igPlotLines_FnFloatPtr("Clock##2", noise, NULL, 200, 0, NULL, -1.0f, 1.0f, (ImVec2){0, 80});
     }
 
+    igText("Time Elapsed: %fµs", timer);
 
-    igSameLine(0, 10.0f);
- 
+
 
 
     igEnd();
 }
-
 
 
 void gui(){
@@ -120,14 +152,15 @@ void gui(){
             igEndMenu();
         }
         if(igBeginMenu("Edit \uf448", true)){
-            if(igMenuItem_Bool("GUI Style", "", show_style_editor, true)){
-                show_style_editor = !show_style_editor;
+            if(igMenuItem_BoolPtr("GUI Style", "", &show_style_editor, true)){
+
             }
             igEndMenu();
         } 
         if(igBeginMenu("View \uf187", true)){
 
             if(igMenuItem_BoolPtr("Simulation", "", &show_simulation_controls, true)){ }
+            if(igMenuItem_BoolPtr("ImGUI Demo", "", &show_demo_window, true)){ }
             igEndMenu();
         } 
         if(igBeginMenu("Help \uf128", true)){
@@ -145,7 +178,8 @@ void gui(){
         igShowStyleEditor(igGetStyle());
         igEnd();
     }
-
+    if (show_demo_window)
+        igShowDemoWindow(&show_demo_window);
     if(show_simulation_controls)
         simulation_controls();
 }
