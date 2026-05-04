@@ -193,8 +193,6 @@ void render_draw_background(){
 
     int size_loc = glGetUniformLocation(background_shader, "quad_size");
     int origin_loc = glGetUniformLocation(background_shader, "quad_origin");
-    // int proj_loc = glGetUniformLocation(background_shader, "projection"); 
-    // glUniformMatrix4fv(proj_loc, 1, false, (float*)projection);
     
     glUniform2f(size_loc, window_size.x * scale, -window_size.y * scale);
     glUniform2f(origin_loc, offset.x, offset.y);
@@ -353,7 +351,7 @@ void render_draw(){
 void render_draw_symbol(symbol_type_t *library, symbol_t *symbol){
     symbol_type_t type = library[symbol->lib_index]; 
     
-    if((symbol->cached_unit == NULL && list_size(type.units) > 1) || (type.has_common_units && symbol->cached_common_unit == NULL)){
+    if((symbol->cached_unit == NULL && list_size(type.units) >= 1) || (type.has_common_units && symbol->cached_common_unit == NULL)){
         // SDL_Log("caching %s of unit %i style %i", type.name, symbol->unit, symbol->style);
 
         for(int i = 0; i < list_size(type.units); i++){

@@ -297,9 +297,11 @@ circuit_t parse_schematic(char *path){
     }
     
     SDL_Log("Interpreting file parse output...");
+    char *sch_path = str_dup(path);
 
     circuit = (circuit_t){
-        .path = str_dup(path),
+        .path = sch_path,
+        .filename = strrchr(sch_path, '/'),
         .symbol_library = list_init(symbol_type_t),
         .symbols = list_init(symbol_t),
         .wires = list_init(shape_t),
@@ -339,7 +341,7 @@ circuit_t parse_schematic(char *path){
             shape_t wire_shape = {
                 .type = DRAW_LINE,
                 .stroke = {
-                    .color = 0x00FF00FF,
+                    .color = 0x660000FF,
                     .line_width = 0.25f 
                 },
                 .data.line = {
@@ -355,8 +357,8 @@ circuit_t parse_schematic(char *path){
             shape_t junction_shape = {
                 .type = DRAW_CIRCLE,
                 .stroke = {
-                    .color = 0x00FF00FF,
-                    .line_width = 0.5f 
+                    .color = 0xAA0000FF,
+                    .line_width = 0.4f 
                 },
                 .data.circle = {
                     // (junction  (at       X/Y  ) )
@@ -364,7 +366,7 @@ circuit_t parse_schematic(char *path){
                         val.children[0].children[0].number,                     
                         val.children[0].children[1].number,
                     },
-                    .radius = 0.25f
+                    .radius = 0.2f
                 }
             };
             list_push(circuit.junctions, junction_shape);

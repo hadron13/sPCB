@@ -73,6 +73,12 @@ int main(){
     //igStyleColorsLight(NULL);
     // Setup scaling
     ImGuiStyle* style = igGetStyle();
+
+    style->ItemSpacing.x = 10;
+    style->WindowRounding = 6.0f;
+    
+
+
     ImGuiStyle_ScaleAllSizes(style, main_scale);     
     style->FontScaleDpi = main_scale;        
     io->ConfigDpiScaleFonts = true;          
@@ -98,7 +104,7 @@ int main(){
 
 
     bool running = true;
-    bool show_demo_window = false;
+    bool show_demo_window = true;
 
     bool mouse_left_pressed = false, mouse_right_pressed = false, mouse_middle_pressed = false;
 
@@ -145,6 +151,13 @@ int main(){
                         render_update_position(event.window.data1, event.window.data2);
                     }
                     break;
+                case SDL_EVENT_KEY_DOWN:
+                    switch(event.key.key){
+                        case SDLK_R:
+                            current_circuit = parse_schematic(current_circuit.path);
+                            break;
+                    }
+                    break;
 
             }
             ImGui_ImplSDL3_ProcessEvent(&event);
@@ -175,9 +188,9 @@ int main(){
         SDL_GetWindowPosition(window, &x, &y);
         // igGetWindowPos(&window_pos);
         // SDL_Log("%i %i", x, y);
-        ImVec2 pos = {x + 0.0f, y + 0.0f};
+        ImVec2 pos = {x + 30.0f, y + 50.0f};
 
-        ImDrawList_AddText_FontPtr(fg, igGetDefaultFont(), 14, pos, col, "Test! \ueda1", NULL, 0, NULL);
+        ImDrawList_AddText_FontPtr(fg, igGetDefaultFont(), 24, pos, col, current_circuit.filename, NULL, 0, NULL);
 
 
 

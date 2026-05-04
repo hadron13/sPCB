@@ -51,6 +51,7 @@ const SDL_DialogFileFilter filters[] = {
     { "All files",   "*" }
 };
 
+bool sim_running_placeholder = false;
 
 void simulation_controls(){
     igBegin("Simulation Controls", &show_simulation_controls, ImGuiWindowFlags_None);
@@ -60,20 +61,26 @@ void simulation_controls(){
 
     igNewLine();
 
-    igPushStyleColor_U32(ImGuiCol_Button,        0xFF00BB00);
-    igPushStyleColor_U32(ImGuiCol_ButtonHovered, 0xFF00DD00);
-    igPushStyleColor_U32(ImGuiCol_ButtonActive,  0xFF00AA00);
-    igButton("Start", (ImVec2){80.0, 30.0});
-    igPopStyleColor(3);
+    if(!sim_running_placeholder){
+        igPushStyleColor_U32(ImGuiCol_Button,        0xFF00BB00);
+        igPushStyleColor_U32(ImGuiCol_ButtonHovered, 0xFF00DD00);
+        igPushStyleColor_U32(ImGuiCol_ButtonActive,  0xFF00AA00);
+        if(igButton("Start", (ImVec2){80.0, 30.0}))
+            sim_running_placeholder = true;
+        igPopStyleColor(3);
+    }else{
+        igPushStyleColor_U32(ImGuiCol_Button,        0xFF0000BB);
+        igPushStyleColor_U32(ImGuiCol_ButtonHovered, 0xFF0000DD);
+        igPushStyleColor_U32(ImGuiCol_ButtonActive,  0xFF0000AA);
+        if(igButton("Stop", (ImVec2){80.0, 30.0}))
+            sim_running_placeholder = false; 
+        igPopStyleColor(3);
+    }
+
 
     igSameLine(0, 10.0f);
  
-    igPushStyleColor_U32(ImGuiCol_Button,        0xFF0000BB);
-    igPushStyleColor_U32(ImGuiCol_ButtonHovered, 0xFF0000DD);
-    igPushStyleColor_U32(ImGuiCol_ButtonActive,  0xFF0000AA);
-    igButton("Stop", (ImVec2){80.0, 30.0});
 
-    igPopStyleColor(3);
 
     igEnd();
 }
@@ -109,6 +116,9 @@ void gui(){
             igEndMenu();
         }
         if(igBeginMenu("Edit \uf448", true)){
+            if(igMenuItem_Bool("GUI Style", "", show_style_editor, true)){
+                show_style_editor = !show_style_editor;
+            }
             igEndMenu();
         } 
         if(igBeginMenu("View \uf187", true)){
@@ -125,6 +135,11 @@ void gui(){
 
 
         igEndMainMenuBar();
+    }
+    if(show_style_editor){
+        igBegin("GUI Style Editor", &show_style_editor, ImGuiWindowFlags_None);
+        igShowStyleEditor(igGetStyle());
+        igEnd();
     }
 
     if(show_simulation_controls)

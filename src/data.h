@@ -141,6 +141,7 @@ typedef struct{
 typedef struct{
     uint32_t version;
     char *path;
+    char *filename;
     
     symbol_type_t *symbol_library;
     symbol_t *symbols;
