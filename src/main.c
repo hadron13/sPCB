@@ -102,7 +102,10 @@ int main(){
     simulation_init();
     render_init();
 
-
+    int x, y;
+    SDL_GetWindowPosition(window, &x, &y);
+    render_update_position(x, y);
+	
     bool running = true;
     bool show_demo_window = true;
 
