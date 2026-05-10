@@ -103,12 +103,18 @@ void simulation_controls(){
 
         timer += 1.0f/165.0f * speed;
 
-        for(int i = 0; i < list_size(current_circuit.wires); i++){    
+        for(int i = 0; i < list_size(current_circuit.netlists); i++){    
+            uint32_t color = 0;
             if(sin(timer * 3.14f + (i ^ 0x5457)) > 0.5f || cos(timer * -2.0f + (i ^ 0x7554)) > 0.5f){
-                current_circuit.wires[i].stroke.color = 0xFF0000FF;
+                color = 0xFF0000FF;
             }else{
-                current_circuit.wires[i].stroke.color = 0x440000FF;
+                color = 0x440000FF;
             }
+            netlist_t net = current_circuit.netlists[i];
+            for(int j = 0; j < list_size(net.wires); j++){
+                current_circuit.wires[net.wires[j]].stroke.color = color;
+            }
+
         }
 
         igPlotLines_FnFloatPtr("Clock##2", noise, NULL, 200, 0, NULL, -1.0f, 1.0f, (ImVec2){0, 80});

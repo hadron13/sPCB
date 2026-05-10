@@ -262,11 +262,70 @@ point_t flip_xy(point_t point){
     return (point_t){-point.x, -point.y};
 }
 
+bool point_equal(point_t a, point_t b){
+    return fabs(a.x - b.x) < 0.0001f && fabs(a.y - b.y) < 0.0001f;
+}
+
+
+bool line_point_intersect(point_t a_start, point_t a_end, point_t p){
+    double cross_product = (a_end.x - a_start.x) * (p.y - a_start.y) -
+                          (a_end.y - a_start.y) * (p.x - a_start.x);
+
+    if (fabs(cross_product) > 0.0001) {
+        return false;
+    }
+
+    bool withinX = (p.x >= fmin(a_start.x, a_end.x)) &&
+                   (p.x <= fmax(a_start.x, a_end.x));
+    bool withinY = (p.y >= fmin(a_start.y, a_end.y)) &&
+                   (p.y <= fmax(a_start.y, a_end.y));
+
+    return withinX && withinY;
+}
+
+bool line_connected(point_t a_start, point_t a_end, point_t b_start, point_t b_end){
+    return  point_equal(a_start, b_start) ||
+            point_equal(a_start, b_end) ||
+            point_equal(a_end, b_start) ||
+            point_equal(a_end, b_end);
+}
+
+
 void add_symbol_type_to_library(parse_value_t parse_value, circuit_t *circuit);
 void add_unit_to_symbol_type(parse_value_t parse_value, symbol_type_t *type);
 void add_wire(parse_value_t parse_value, circuit_t *circuit);
 void add_shape_to_list(parse_value_t parse_value, shape_t **list);
 
+void eval_netlist(circuit_t *circuit, int wire_idx, int **traversed_wire_list, netlist_t *net){
+
+    shape_t wire_a = circuit->wires[wire_idx];
+    list_push(net->wires, wire_idx); 
+
+    for(int i = 0; i < list_size(circuit->wires); i++){
+      for(int j = 0; j < list_size(*traversed_wire_list); j++){
+        if(i == (*traversed_wire_list)[j])
+          goto end;
+      }
+     
+      shape_t wire_b = circuit->wires[i];
+
+      if(line_connected(wire_a.data.line.start, wire_a.data.line.end, 
+                        wire_b.data.line.start, wire_b.data.line.end)){
+        list_push(net->wires, i); 
+        list_push(*traversed_wire_list, i);
+        i = 0;
+        wire_a = wire_b;
+      }
+
+
+      end:;
+    }
+
+
+
+
+
+}
 
 circuit_t parse_schematic(char *path){
     
@@ -516,6 +575,31 @@ circuit_t parse_schematic(char *path){
     }
 
     free_expression(parsed_output);
+
+
+    circuit.netlists = list_init(netlist_t*);
+  
+    int *traversed_wires = list_init(int); 
+    
+    for(int i = 0; i < list_size(circuit.wires); i++){
+      for(int j = 0; j < list_size(traversed_wires); j++){
+        if(i == traversed_wires[j])
+          goto end;
+      }
+
+      netlist_t new_net = {
+        list_init(int)
+      };
+      SDL_Log("new netlist");
+      eval_netlist(&circuit, i, &traversed_wires, &new_net);
+      
+      list_push(circuit.netlists, new_net);
+      
+      end:;
+    }
+
+
+
 
     return circuit;
 }

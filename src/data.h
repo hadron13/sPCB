@@ -132,9 +132,11 @@ typedef struct{
     unit_type_t *cached_unit;
 }symbol_t;
 
+
 typedef struct{
-    float *pins; 
-}net_t;
+    int *wires;
+}netlist_t;
+
 
 //unified schematic data 
 //based on KiCad schematic file format
@@ -150,6 +152,9 @@ typedef struct{
     shape_t *junctions;
     shape_t *busses;
     shape_t *bus_entries;
+
+    netlist_t *netlists;
+
 }circuit_t;
 
 
