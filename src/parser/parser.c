@@ -263,7 +263,7 @@ point_t flip_xy(point_t point){
 }
 
 bool point_equal(point_t a, point_t b){
-    return fabs(a.x - b.x) < 0.0001f && fabs(a.y - b.y) < 0.0001f;
+    return fabs(a.x - b.x) < 0.05f && fabs(a.y - b.y) < 0.05f;
 }
 
 
@@ -290,41 +290,50 @@ bool line_connected(point_t a_start, point_t a_end, point_t b_start, point_t b_e
             point_equal(a_end, b_end);
 }
 
+bool line_shape_connected(shape_t a, shape_t b){
+    return line_connected(a.data.line.start, a.data.line.end, 
+                          b.data.line.start, b.data.line.end);
+}
 
 void add_symbol_type_to_library(parse_value_t parse_value, circuit_t *circuit);
 void add_unit_to_symbol_type(parse_value_t parse_value, symbol_type_t *type);
 void add_wire(parse_value_t parse_value, circuit_t *circuit);
 void add_shape_to_list(parse_value_t parse_value, shape_t **list);
 
+
+//TODO: copy list + swap-delete traversed wires
 void eval_netlist(circuit_t *circuit, int wire_idx, int **traversed_wire_list, netlist_t *net){
 
     shape_t wire_a = circuit->wires[wire_idx];
-    list_push(net->wires, wire_idx); 
+    list_push(net->wires, wire_idx);
+    list_push(*traversed_wire_list, wire_idx); 
+    //SDL_Log("novo fio: %i", wire_idx);
+    //SDL_Log("fios atravessados %i", list_size(*traversed_wire_list));
+
+    SDL_Log("\tA: (%f, %f) -- (%f, %f)", wire_a.data.line.start.x, wire_a.data.line.start.y, wire_a.data.line.end.x, wire_a.data.line.end.y);
 
     for(int i = 0; i < list_size(circuit->wires); i++){
-      for(int j = 0; j < list_size(*traversed_wire_list); j++){
-        if(i == (*traversed_wire_list)[j])
-          goto end;
-      }
+
+        for(int j = 0; j < list_size(*traversed_wire_list); j++){
+            if(i == (*traversed_wire_list)[j])
+            goto end;
+        }
      
-      shape_t wire_b = circuit->wires[i];
+        shape_t wire_b = circuit->wires[i];
 
-      if(line_connected(wire_a.data.line.start, wire_a.data.line.end, 
-                        wire_b.data.line.start, wire_b.data.line.end)){
-        list_push(net->wires, i); 
-        list_push(*traversed_wire_list, i);
-        i = 0;
-        wire_a = wire_b;
-      }
+        if(line_connected(wire_a.data.line.start, wire_a.data.line.end, 
+                          wire_b.data.line.start, wire_b.data.line.end)){
+            list_push(net->wires, i); 
+            list_push(*traversed_wire_list, i);
+//            SDL_Log("mynewwire: %i", i);
 
+            SDL_Log("\tB: (%f, %f) -- (%f, %f)", wire_b.data.line.start.x, wire_b.data.line.start.y, wire_b.data.line.end.x, wire_b.data.line.end.y);
 
-      end:;
+            wire_a = wire_b;
+            i = 0;
+        }
+        end:;
     }
-
-
-
-
-
 }
 
 circuit_t parse_schematic(char *path){
@@ -562,8 +571,6 @@ circuit_t parse_schematic(char *path){
                     continue;
                 }
 
-
-
             }
             
             SDL_Log("adding instance of %s (index %zu, unit %i, style %i)", lib_id, symbol.lib_index, symbol.unit, symbol.style);
@@ -582,23 +589,30 @@ circuit_t parse_schematic(char *path){
     int *traversed_wires = list_init(int); 
     
     for(int i = 0; i < list_size(circuit.wires); i++){
-      for(int j = 0; j < list_size(traversed_wires); j++){
-        if(i == traversed_wires[j])
-          goto end;
-      }
-
-      netlist_t new_net = {
-        list_init(int)
-      };
-      SDL_Log("new netlist");
-      eval_netlist(&circuit, i, &traversed_wires, &new_net);
-      
-      list_push(circuit.netlists, new_net);
-      
-      end:;
+        for(int j = 0; j < list_size(traversed_wires); j++){
+            if(i == traversed_wires[j])
+                goto end;
+        }
+        int connections = 0;
+        for(int j = 0; j < list_size(circuit.wires); j++){
+            if(i == j)
+                continue;
+            if(!line_shape_connected(circuit.wires[i], circuit.wires[j]))
+                continue;
+            connections += 1;
+            if(connections > 1)
+                goto end;                
+        }
+        netlist_t new_net = {
+            list_init(int)
+        };
+        SDL_Log("new netlist %i", list_size(circuit.netlists));
+        eval_netlist(&circuit, i, &traversed_wires, &new_net);
+        
+        list_push(circuit.netlists, new_net);
+        
+        end:;
     }
-
-
 
 
     return circuit;
